@@ -4,7 +4,7 @@ import re
 import cv2
 import numpy as np
 
-from Config import config
+from FaceRecognition.Config import config
 
 
 class FeatureCompute:
@@ -74,21 +74,27 @@ class FeatureCompute:
             imageList.append(cv2.imread(curImagePath))
         return imageList
 
-    def SaveFeature(self, featureStructList: list, featureSavePathFolder: str):
+    def SaveFeature(self, featureStructList: list, isAppend: bool = True):
         """
         保存特征列表
+        :param isAppend: 是否以追加的方式保存
         :param featureStructList: 特征结构体列表, 结构体的第一个元素为人名, 第二个元素为特征列表
-        :param featureSavePathFolder: 保存特征的文件夹路径
         """
-        if not os.path.exists(featureSavePathFolder):
-            os.makedirs(featureSavePathFolder)
-        savePath = os.path.join(featureSavePathFolder, "meanFeature.csv")
-        with open(savePath, "w") as f:
-            for name, feature in featureStructList:
-                f.write(name + "," + str(feature) + "\n")
+        if not os.path.exists(config.featureSaveFolderRoot):
+            os.makedirs(config.featureSaveFolderRoot)
+        savePath = os.path.join(config.featureSaveFolderRoot, "meanFeature.csv")
+
+        if isAppend:
+            with open(savePath, "w") as f:
+                for name, feature in featureStructList:
+                    f.write(name + "," + str(feature) + "\n")
+        else:
+            with open(savePath, "a") as f:
+                for name, feature in featureStructList:
+                    f.write(name + "," + str(feature) + "\n")
 
 
-featureCompute = FeatureCompute()   # 创建特征计算对象, 供其他模块使用
+featureCompute = FeatureCompute()  # 创建特征计算对象, 供其他模块使用
 
 if __name__ == '__main__':  # 测试代码
     featureStructList = []
@@ -97,4 +103,4 @@ if __name__ == '__main__':  # 测试代码
         meanFeature = featureCompute.GetMeanFeature(imageList)
         print(f"{name}的特征均值为{list(meanFeature)}\n")
         featureStructList.append((name, list(meanFeature)))
-    featureCompute.SaveFeature(featureStructList, config.featureSaveFolderRoot)
+    featureCompute.SaveFeature(featureStructList)

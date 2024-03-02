@@ -4,7 +4,7 @@ import random
 import cv2
 import numpy
 
-from Config import config
+from FaceRecognition.Config import config
 
 
 class FaceCollect:
@@ -39,6 +39,11 @@ class FaceCollect:
             x2 = rectangle.left() if rectangle.left() > 0 else 0
             y2 = rectangle.right() if rectangle.right() > 0 else 0
             faceImage = image[x1:y1, x2:y2]  # 截取人脸
+
+            cv2.imshow('image', faceImage)  # 显示图片
+            if cv2.waitKey(1) & 0xFF == ord('q'):   # 如果不延迟, 会造成显示不正常
+                break
+
             # 随机化亮度与对比度
             faceImage = self.__RandomizeImage(faceImage, random.uniform(0.8, 1.2), random.randint(-50, 50))
             # 调整图片的尺寸
@@ -47,6 +52,7 @@ class FaceCollect:
 
             if len(faceImageList) > self._captureImageCount:
                 break
+        cv2.destroyAllWindows()
         return _name, faceImageList
 
     def StorageFaceImageList(self, _name: str, faceImageList: list):

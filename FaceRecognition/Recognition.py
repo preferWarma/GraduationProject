@@ -20,7 +20,33 @@ class Recognition:
         """
         return np.sqrt(np.sum(np.square(np.array(feature1) - np.array(feature2))))
 
-    def __LoadKnownFeatures(self, csvPath: str) -> list:
+    def __DetectFaces(self, image, detector):
+        """
+        检测图像中的人脸
+        :param image: 每一帧的输入图像
+        :param detector: 人脸检测器
+        :return: faces: 检测到的人脸列表
+        """
+        if image is None:
+            return []
+        grayImage = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
+        faces = detector(grayImage, 0)
+        return faces
+
+    def __DrawRectangleAndText(self, image, faceList, faceFeatureList):
+        font = cv2.FONT_HERSHEY_COMPLEX  # 字体
+        for index, face in enumerate(faceList):
+            name = faceFeatureList[index][0]
+            # 绘制矩形框
+            rectanglePosition = tuple([face.left(), face.top(), face.right(), face.bottom()])  # 矩形框位置
+            rectangleColor = (0, 255, 0)  # 矩形框颜色: 绿色
+            cv2.rectangle(image, rectanglePosition[0:2], rectanglePosition[2:], rectangleColor, 2)
+            # 绘制文字
+            textPosition = tuple([face.left(), int(face.bottom() + (face.bottom() - face.top()) / 4)])  # 文字位置
+            textColor = (0, 255, 0) if name != "unknown" else (0, 0, 255)  # 如果是已知人脸显示颜色为绿色, 否则为红色
+            cv2.putText(image, name, textPosition, font, 1, textColor, 2)
+
+    def LoadKnownFeatures(self, csvPath: str) -> list:
         """
         从 csv 文件中加载已知人脸特征\n
         csv 文件中的数据格式为: [name, [feature_1, feature_2, ..., feature_128]]
@@ -44,34 +70,10 @@ class Recognition:
                 featureList.append([name, feature])
         return featureList
 
-    def __DetectFaces(self, image, detector):
-        """
-        检测图像中的人脸
-        :param image: 每一帧的输入图像
-        :param detector: 人脸检测器
-        :return: faces: 检测到的人脸列表
-        """
-        grayImage = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
-        faces = detector(grayImage, 0)
-        return faces
-
-    def __DrawRectangleAndText(self, image, faceList, faceFeatureList):
-        font = cv2.FONT_HERSHEY_COMPLEX  # 字体
-        for index, face in enumerate(faceList):
-            name = faceFeatureList[index][0]
-            # 绘制矩形框
-            rectanglePosition = tuple([face.left(), face.top(), face.right(), face.bottom()])  # 矩形框位置
-            rectangleColor = (0, 255, 0)  # 矩形框颜色: 绿色
-            cv2.rectangle(image, rectanglePosition[0:2], rectanglePosition[2:], rectangleColor, 2)
-            # 绘制文字
-            textPosition = tuple([face.left(), int(face.bottom() + (face.bottom() - face.top()) / 4)])  # 文字位置
-            textColor = (0, 255, 0) if name != "unknown" else (0, 0, 255)  # 如果是已知人脸显示颜色为绿色, 否则为红色
-            cv2.putText(image, name, textPosition, font, 1, textColor, 2)
-
     def Main(self):
         camera = cv2.VideoCapture(0)
         path = os.path.join(config.featureSaveFolderRoot, "meanFeature.csv")
-        knownFeatureList = self.__LoadKnownFeatures(path)  # 加载已知人脸特征
+        knownFeatureList = self.LoadKnownFeatures(path)  # 加载已知人脸特征
 
         while camera.isOpened():
             start_time = time.time()
