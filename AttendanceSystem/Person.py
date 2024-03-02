@@ -48,10 +48,14 @@ class Person:
         print('Record:', self.record)
         print('FaceInfo:', self.__faceInfo)
 
+    def ToSaveString(self):
+        return self.name + ',' + self.id + ',' + str(self.record) + ',' + str(self.__faceInfo) + '\n'
+
 
 if __name__ == '__main__':
     p = Person('SB', '001')
     p.SignIn()
-    time.sleep(3)
+    time.sleep(1)
     p.SignOut()
-    p.printInfo()
+    # p.printInfo()
+    print(p.ToSaveString())

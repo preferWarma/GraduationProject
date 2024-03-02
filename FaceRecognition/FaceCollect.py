@@ -4,7 +4,7 @@ import random
 import cv2
 import numpy
 
-from FaceRecognition.Config import config
+from Config import config
 
 
 class FaceCollect:

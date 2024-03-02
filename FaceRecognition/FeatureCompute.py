@@ -4,7 +4,7 @@ import re
 import cv2
 import numpy as np
 
-from FaceRecognition.Config import config
+from Config import config
 
 
 class FeatureCompute:
