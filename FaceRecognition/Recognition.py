@@ -1,10 +1,11 @@
 import os
-import csv
 import time
 
 import cv2
 import numpy as np
+
 from Config import config
+from SqlController import sqlController
 
 
 class Recognition:
@@ -46,34 +47,9 @@ class Recognition:
             textColor = (0, 255, 0) if name != "unknown" else (0, 0, 255)  # 如果是已知人脸显示颜色为绿色, 否则为红色
             cv2.putText(image, name, textPosition, font, 1, textColor, 2)
 
-    def LoadKnownFeatures(self, csvPath: str) -> list:
-        """
-        从 csv 文件中加载已知人脸特征\n
-        csv 文件中的数据格式为: [name, [feature_1, feature_2, ..., feature_128]]
-        :param csvPath: csv 文件路径
-        :return: 已知人脸特征列表
-        """
-        if not os.path.exists(csvPath):
-            print("CSV 文件不存在")
-            return []
-
-        featureList = []
-        with open(csvPath, "r") as file:
-            csvReader = csv.reader(file)
-            for row in csvReader:
-                name = row[0]
-                feature = row[1:]
-                # 去掉第一个元素最前面的 "["和最后一个元素最后面的 "]"
-                feature[0] = feature[0][1:]
-                feature[-1] = feature[-1][:-1]
-                feature = list(map(float, feature))
-                featureList.append([name, feature])
-        return featureList
-
     def Main(self):
         camera = cv2.VideoCapture(0)
-        path = os.path.join(config.featureSaveFolderRoot, "meanFeature.csv")
-        knownFeatureList = self.LoadKnownFeatures(path)  # 加载已知人脸特征
+        knownFeatureList = sqlController.SelectAll()
 
         while camera.isOpened():
             start_time = time.time()

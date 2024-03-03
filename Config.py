@@ -16,7 +16,7 @@ class Config:
     captureImageCount: int = 10  # 采集图像数量
 
     imageSaveFolderRoot: str = 'D:\\Projects\\PytorchProject\\Image'  # 图像存储位置根目录
-    featureSaveFolderRoot: str = 'D:\\Projects\\PytorchProject\\Csv'  # CSV 文件存储位置根目录
+    csvSaveFolderRoot: str = 'D:\\Projects\\PytorchProject\\Csv'  # CSV 文件存储位置根目录
 
     detector = dlib.get_frontal_face_detector()  # 人脸检测器
     predictor = dlib.shape_predictor(__shapePredictorPath)  # 人脸关键点检测器
@@ -26,8 +26,8 @@ class Config:
         print("初始化配置信息")
         if not os.path.exists(self.imageSaveFolderRoot):
             os.makedirs(self.imageSaveFolderRoot)
-        if not os.path.exists(self.featureSaveFolderRoot):
-            os.makedirs(self.featureSaveFolderRoot)
+        if not os.path.exists(self.csvSaveFolderRoot):
+            os.makedirs(self.csvSaveFolderRoot)
         if not os.path.exists(self.__shapePredictorPath):
             print("人脸关键点检测模型路径不存在")
         if not os.path.exists(self.__faceRecognitionModelPath):

@@ -10,7 +10,7 @@ from Config import config
 class FaceCollect:
     # 私有属性
     _camera = cv2.VideoCapture(0)  # 打开摄像头 参数为输入流，可以为摄像头或视频文件, 0表示第一个摄像头
-    _captureImageCount: int  # 存储20张人脸特征图像
+    _captureImageCount: int  # 存储人脸特征图像张数
 
     def __init__(self, videoPath: str = None, captureImageCount: int = config.captureImageCount):
         if videoPath is not None:
