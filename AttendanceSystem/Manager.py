@@ -59,5 +59,23 @@ def test2():
         p.printInfo()
 
 
+def test3():
+    p = manager.GetPerson(1)
+    p.printInfo()
+    p.SignIn()
+    time.sleep(3)
+    p.SignOut()
+    manager.UpdatePerson(p.id, p.name, p.record)
+    p = manager.GetPerson(1)
+    p.printInfo()
+
+
 if __name__ == '__main__':
-    test2()
+    p = manager.GetPerson(1)
+    p.printInfo()
+    # 在昨天的记录上签到
+    p.SignInWithTime('2021-07-20', '08:00:00')
+    p.SignOutWithTime('2021-07-20', '17:00:00')
+    manager.UpdatePerson(p.id, p.name, p.record)
+    p = manager.GetPerson(1)
+    p.printInfo()

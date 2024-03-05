@@ -1,12 +1,9 @@
-import time
 from datetime import datetime
 
-import cv2
 import numpy as np
 
 from FaceRecognition.FaceCollect import faceCollect
 from FaceRecognition.FeatureCompute import featureCompute
-from SqlController import sqlController
 
 
 class Person:
@@ -47,14 +44,34 @@ class Person:
     def printInfo(self):
         print('Name:', self.name)
         print('ID:', self.id)
-        print('Record:', self.record)
+        print('Record:\n', self.recordToString(), sep='')
+
+    def recordToString(self):
+        if len(self.record) == 0:
+            return '无记录'
+        ret = ''
+        for date, record in self.record.items():
+            ret += date + ':\t'
+            for r in record:
+                ret += r + '\t'
+            ret += '\n'
+        return ret
+
+    def SignInWithTime(self, day, time):
+        if day not in self.record:
+            self.record[day] = []
+        if time + '--签到' not in self.record[day]:
+            self.record[day].append(time + '--签到')
+
+    def SignOutWithTime(self, day, time):
+        if day not in self.record:
+            self.record[day] = []
+        if time + '--签退' not in self.record[day]:
+            self.record[day].append(time + '--签退')
 
 
 if __name__ == '__main__':
-    p = Person('Lyf', sqlController.GetNewId())
-    p.SetFaceInfo(cv2.VideoCapture(0))
-    p.SignIn()
-    time.sleep(3)
-    p.SignOut()
-    sqlController.InsertPersonWithJudgeExist(p.id, p.name, p.record)
     pass
+
+
+
