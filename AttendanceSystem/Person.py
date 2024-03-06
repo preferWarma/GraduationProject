@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import numpy as np
 
@@ -27,19 +27,48 @@ class Person:
         self.__faceInfo = featureCompute.GetMeanFeature(faceImageList)
         featureCompute.SaveFeatureToSql([[name, list(self.__faceInfo)]])
 
-    def SignIn(self):  # 签到
+    def SignIn(self) -> bool:  # 签到
         today = datetime.now().strftime('%Y-%m-%d')
-        now = datetime.now().strftime('%H:%M:%S')
+        now = datetime.now()
         if today not in self.record:
             self.record[today] = []
-        self.record[today].append(now + '--签到')
 
-    def SignOut(self):  # 签退
+        # 检查是否有签到记录，并且距离上次签到时间是否超过0.5小时
+        lastSignInTime = self.getLastSignInTime(today)
+        if lastSignInTime is None or (now - lastSignInTime) > timedelta(hours=0.5):
+            self.record[today].append(now.strftime('%H:%M:%S') + '--签到')
+            return True
+        else:
+            print("半小时内只能签到一次")
+            return False
+
+    def SignOut(self) -> bool:  # 签退
         today = datetime.now().strftime('%Y-%m-%d')
-        now = datetime.now().strftime('%H:%M:%S')
+        now = datetime.now()
         if today not in self.record:
             self.record[today] = []
-        self.record[today].append(now + '--签退')
+        # 检查是否有签退记录，并且距离上次签退时间是否超过0.5小时
+        lastSignOutTime = self.getLastSignOutTime(today)
+        if lastSignOutTime is None or (now - lastSignOutTime) > timedelta(hours=0.5):
+            self.record[today].append(now.strftime('%H:%M:%S') + '--签退')
+            return True
+        else:
+            print("半小时内只能签退一次")
+            return False
+
+    def getLastSignInTime(self, today):
+        if today in self.record.keys():
+            for record in reversed(self.record[today]):
+                if '签到' in record:
+                    return datetime.strptime(today + ' ' + record.split('--')[0], '%Y-%m-%d %H:%M:%S')
+        return None
+
+    def getLastSignOutTime(self, today):
+        if today in self.record and self.record[today]:
+            for record in reversed(self.record[today]):
+                if '签退' in record:
+                    return datetime.strptime(today + ' ' + record.split('--')[0], '%Y-%m-%d %H:%M:%S')
+        return None
 
     def printInfo(self):
         print('Name:', self.name)
@@ -71,7 +100,13 @@ class Person:
 
 
 if __name__ == '__main__':
-    pass
+    p = Person('test', 1)
+    p.printInfo()
+    p.SignIn()
+    p.SignIn()
+    p.SignOut()
+    p.SignOut()
+    p.printInfo()
 
 
 

@@ -6,21 +6,23 @@ import cv2
 from PIL import Image, ImageTk
 
 from AttendanceSystem.Manager import manager
+from FaceRecognition.Recognition import recognition
 from SqlController import sqlController
 
 
 class AdminGui:
     def __init__(self, master):
+        self.retNameList = []  # 保存识别出的人名列表
         self.master = master
         master.title("管理员界面")
 
         # 左侧按钮容器
-        left_frame = tk.Frame(master, padx=20, pady=20)
-        left_frame.pack(side=tk.LEFT, padx=10, pady=10)
+        self.left_frame = tk.Frame(master, padx=20, pady=20)
+        self.left_frame.pack(side=tk.LEFT, padx=10, pady=10)
 
         # 在顶部居中显示Label
-        label = tk.Label(master, text="管理员界面", font=("Helvetica", 20))
-        label.pack(side=tk.TOP, pady=20)
+        label = tk.Label(master, text="XXX考勤系统界面", font=("Helvetica", 20))
+        label.pack(side=tk.TOP, pady=10)
 
         # 创建按钮样式
         self.style = ttk.Style()
@@ -28,15 +30,33 @@ class AdminGui:
         self.style.configure("TButton", padding=(10, 5, 10, 5), width=30, height=15)
 
         # 左侧按钮
-        btnAdd = ttk.Button(left_frame, text="新增人员", command=self.addPerson, style="TButton")
-        btnView = ttk.Button(left_frame, text="查看人员信息", command=self.queryPerson, style="TButton")
-        btnEdit = ttk.Button(left_frame, text="修改人员信息", command=self.modifyPerson, style="TButton")
-        btnDelete = ttk.Button(left_frame, text="删除人员", command=self.deletePerson, style="TButton")
+        self.btnAdd = ttk.Button(self.left_frame, text="新增人员", command=self.addPerson, style="TButton")
+        self.btnView = ttk.Button(self.left_frame, text="查看人员信息", command=self.queryPerson, style="TButton")
+        self.btnEdit = ttk.Button(self.left_frame, text="修改人员信息", command=self.modifyPerson, style="TButton")
+        self.btnDelete = ttk.Button(self.left_frame, text="删除人员", command=self.deletePerson, style="TButton")
 
-        btnAdd.pack(side=tk.TOP, pady=10)
-        btnView.pack(side=tk.TOP, pady=10)
-        btnEdit.pack(side=tk.TOP, pady=10)
-        btnDelete.pack(side=tk.TOP, pady=10)
+        self.btnAdd.grid(row=0, column=0, pady=10)
+        self.btnView.grid(row=1, column=0, pady=10)
+        self.btnEdit.grid(row=2, column=0, pady=10)
+        self.btnDelete.grid(row=3, column=0, pady=10)
+
+        # 登录界面
+        self.loginNameLabel = ttk.Label(self.left_frame, text="用户名:")
+        self.loginNameEntry = ttk.Entry(self.left_frame)
+        self.loginNameLabel.grid(row=4, column=0, padx=10, pady=10)
+        self.loginNameEntry.grid(row=4, column=1, padx=10, pady=10)
+        self.loginPasswordLabel = Label(self.left_frame, text="密码:")
+        self.loginPasswordEntry = Entry(self.left_frame)
+        self.loginPasswordLabel.grid(row=5, column=0, padx=10, pady=10)
+        self.loginPasswordEntry.grid(row=5, column=1, padx=10, pady=10)
+        self.loginButton = ttk.Button(self.left_frame, text="登录", command=self.login, style="TButton")
+        self.loginButton.grid(row=6, column=0, pady=10)
+
+        # 签到界面
+        self.signInButton = tk.Button(self.left_frame, text="签到", command=self.signIn, width=10, height=1)
+        self.signInButton.grid(row=10, column=0, padx=10, pady=10, sticky=tk.W)
+        self.signOutButton = tk.Button(self.left_frame, text="签退", command=self.signOut, width=10, height=1)
+        self.signOutButton.grid(row=10, column=1, padx=10, pady=10)
 
         # 右侧摄像头输入流显示框
         self.videoLabel = ttk.Label(master)
@@ -46,14 +66,93 @@ class AdminGui:
         self.cap = cv2.VideoCapture(0)
         self.showVideo()
 
+        # 默认显示登录界面
+        self.showLoginSection()
+
+        # 登录失败提示
+        self.loginFailLabel = ttk.Label(self.left_frame, text="", foreground='red',
+                                        font=("Helvetica", 15))
+        self.loginFailLabel.grid(row=6, column=0, pady=10, columnspan=2)
+
+        # 签到提示
+        self.signTooltipLabel = ttk.Label(self.left_frame, text="", foreground='red',
+                                          font=("Helvetica", 15))
+        self.signTooltipLabel.grid(row=12, column=0, pady=10, columnspan=2)
+
     def showVideo(self):
+        self.retNameList = []
         _, frame = self.cap.read()
+        frame, self.retNameList = recognition.handle(frame)
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         img = Image.fromarray(frame)
         imgtk = ImageTk.PhotoImage(image=img)
         self.videoLabel.imgtk = imgtk
         self.videoLabel.configure(image=imgtk)
         self.videoLabel.after(10, self.showVideo)  # 10ms后调用showVideo
+
+    def showManagerSection(self):
+        # 隐藏登录界面
+        self.loginNameLabel.grid_forget()
+        self.loginNameEntry.grid_forget()
+        self.loginPasswordLabel.grid_forget()
+        self.loginPasswordEntry.grid_forget()
+        self.loginButton.grid_forget()
+        # 显示管理员界面
+        self.btnAdd.grid(row=0, column=0, pady=10)
+        self.btnView.grid(row=1, column=0, pady=10)
+        self.btnEdit.grid(row=2, column=0, pady=10)
+        self.btnDelete.grid(row=3, column=0, pady=10)
+
+    def showLoginSection(self):
+        # 隐藏管理员界面
+        self.btnAdd.grid_forget()
+        self.btnView.grid_forget()
+        self.btnEdit.grid_forget()
+        self.btnDelete.grid_forget()
+        # 显示登录界面
+        self.loginNameLabel.grid(row=0, column=0, padx=10, pady=10)
+        self.loginNameEntry.grid(row=0, column=1, padx=10, pady=10)
+        self.loginPasswordLabel.grid(row=1, column=0, padx=1, pady=10)
+        self.loginPasswordEntry.grid(row=1, column=1, padx=1, pady=10)
+        self.loginButton.grid(row=2, column=0, columnspan=2, pady=10)
+
+    def login(self):
+        # 实现登录逻辑
+        if self.loginNameEntry.get().isspace() or self.loginPasswordEntry.get().isspace() \
+                or self.loginNameEntry.get() == '' or self.loginPasswordEntry.get() == '':
+            self.loginFailLabel.configure(text="用户名或密码不能为空", foreground='red')
+            return
+        if manager.Login(self.loginNameEntry.get(), self.loginPasswordEntry.get()):
+            self.showManagerSection()
+            self.loginFailLabel.configure(text="")
+        else:
+            self.loginFailLabel.configure(text="用户名或密码错误", foreground='red')
+
+    def signIn(self):
+        if len(self.retNameList) == 0:
+            self.signTooltipLabel.configure(text="没有检测到人脸", foreground='red')
+            return
+        for name in self.retNameList:
+            person = manager.GetPersonByName(name)
+            if person is not None:
+                if person.SignIn():
+                    manager.UpdatePerson(person.id, person.name, person.record)
+                    self.signTooltipLabel.configure(text="签到成功", foreground='green')
+                else:
+                    self.signTooltipLabel.configure(text="半小时内只能签到一次", foreground='red')
+
+    def signOut(self):
+        if len(self.retNameList) == 0:
+            self.signTooltipLabel.configure(text="没有检测到人脸", foreground='red')
+            return
+        for name in self.retNameList:
+            person = manager.GetPersonByName(name)
+            if person is not None:
+                if person.SignOut():
+                    manager.UpdatePerson(person.id, person.name, person.record)
+                    self.signTooltipLabel.configure(text="签退成功", foreground='green')
+                else:
+                    self.signTooltipLabel.configure(text="半小时内只能签退一次", foreground='red')
 
     def addPerson(self):
         # 实现新增人员的逻辑
@@ -138,7 +237,7 @@ class DeletePersonWindow(tk.Toplevel):
 
     def checkIdExist(self) -> bool:
         # 检查输入的Id是否存在
-        return sqlController.SelectPerson(self.personIdToDelete) is not None
+        return sqlController.SelectPersonById(self.personIdToDelete) is not None
 
 
 class QueryPersonWindow(tk.Toplevel):
@@ -171,7 +270,7 @@ class QueryPersonWindow(tk.Toplevel):
             return
         self.personIdToQuery = int(self.entryId.get())
         # 实现查询人员的逻辑
-        person = manager.GetPerson(self.personIdToQuery)
+        person = manager.GetPersonById(self.personIdToQuery)
         # 根据实际情况更新self.resultLabel的文本
         if person is None:
             self.resultLabel.configure(text="Id不存在", foreground='red')
@@ -280,7 +379,7 @@ class ModifyPersonWindow(tk.Toplevel):
             self.resultLabel.configure(text="请输入正确的ID格式", foreground='red')
             return False
         self.personIdToModify = int(self.personIdToModify)
-        self.personToModify = manager.GetPerson(self.personIdToModify)
+        self.personToModify = manager.GetPersonById(self.personIdToModify)
         # 根据实际情况更新self.resultLabel的文本
         if self.personToModify is None:
             self.resultLabel.configure(text="Id不存在", foreground='red')

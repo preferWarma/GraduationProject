@@ -17,7 +17,7 @@ class Manager:
         return p
 
     def DeletePerson(self, _id: int):
-        p = self.GetPerson(_id)
+        p = self.GetPersonById(_id)
         if p is None:
             return
         sqlController.DeletePerson(p.id)
@@ -26,25 +26,35 @@ class Manager:
     def UpdatePerson(self, _id, _name, _record: dict):
         sqlController.UpdatePerson(_id, _name, _record)
 
-    def GetPerson(self, _id: int):
-        res = sqlController.SelectPerson(_id)
+    def GetPersonById(self, _id: int):
+        res = sqlController.SelectPersonById(_id)
         if res is None:
             return None
         return Person(res[0], _id, res[1])
+
+    def GetPersonByName(self, _name: str):
+        res = sqlController.SelectPersonByName(_name)
+        if res is None:
+            return None
+        return Person(_name, res[0], res[1])
+
+
+    def Login(self, _id, _password) -> bool:
+        return sqlController.Login(_id, _password)
 
 
 manager = Manager()
 
 
 def test1():
-    p = manager.GetPerson(2)
+    p = manager.GetPersonById(2)
     p.printInfo()
     p.name = 'ZhangSan'
     p.SignIn()
     time.sleep(3)
     p.SignOut()
     manager.UpdatePerson(p.id, p.name, p.record)
-    p = manager.GetPerson(2)
+    p = manager.GetPersonById(2)
     p.printInfo()
 
 
@@ -52,7 +62,7 @@ def test2():
     p = manager.AddPerson('LiSi', cv2.VideoCapture(0))
     p.printInfo()
     manager.DeletePerson(1)
-    p = manager.GetPerson(1)
+    p = manager.GetPersonById(1)
     if p is None:
         print('删除成功')
     else:
@@ -60,22 +70,22 @@ def test2():
 
 
 def test3():
-    p = manager.GetPerson(1)
+    p = manager.GetPersonById(1)
     p.printInfo()
     p.SignIn()
     time.sleep(3)
     p.SignOut()
     manager.UpdatePerson(p.id, p.name, p.record)
-    p = manager.GetPerson(1)
+    p = manager.GetPersonById(1)
     p.printInfo()
 
 
 if __name__ == '__main__':
-    p = manager.GetPerson(1)
+    p = manager.GetPersonById(1)
     p.printInfo()
     # 在昨天的记录上签到
     p.SignInWithTime('2021-07-20', '08:00:00')
     p.SignOutWithTime('2021-07-20', '17:00:00')
     manager.UpdatePerson(p.id, p.name, p.record)
-    p = manager.GetPerson(1)
+    p = manager.GetPersonById(1)
     p.printInfo()

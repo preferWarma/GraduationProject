@@ -90,9 +90,17 @@ class SqlController:
             return None
         return np.fromstring(result[0][1:-1], sep=', ')
 
-    def SelectPerson(self, id: int):
+    def SelectPersonById(self, id: int):
         sql = "select name, record from PersonDataBase where id = %s"
         self.cursor.execute(sql, (id,))
+        result = self.cursor.fetchone()
+        if result is None:
+            return None
+        return result[0], eval(result[1])
+
+    def SelectPersonByName(self, name: str):
+        sql = "select id, record from PersonDataBase where name = %s"
+        self.cursor.execute(sql, (name,))
         result = self.cursor.fetchone()
         if result is None:
             return None
@@ -133,6 +141,12 @@ class SqlController:
             return 1
         return selectResult[0] + 1
 
+    def Login(self, userId: str, password: str) -> bool:
+        sql = "select * from managerDataBase where id = %s and password = %s"
+        self.cursor.execute(sql, (userId, password))
+        result = self.cursor.fetchone()
+        return result is not None
+
     def __del__(self):
         self.__mydb.close()
 
@@ -144,6 +158,6 @@ if __name__ == '__main__':
     # feature = sqlController.Select("test")
     # print(feature)
     # features = sqlController.SelectAll()
-    a = sqlController.SelectPerson(2)
+    a = sqlController.SelectPersonById(2)
     print(a)
     pass
