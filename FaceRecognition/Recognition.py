@@ -57,30 +57,7 @@ class Recognition:
             if key == ord('q'):
                 break
 
-            faceList = self.__DetectFaces(frame, config.detector)
-            if not faceList:
-                print("未检测到人脸")
-                continue
-
-            faceFeatureList = []  # 当前帧的人脸特征列表,格式[name, feature(128D)]
-            for face in faceList:
-                landmark = config.predictor(frame, face)
-                feature = config.faceRecognitionModel.compute_face_descriptor(frame, landmark)
-                faceFeatureList.append(["unknown", feature])
-
-            for faceFeature in faceFeatureList:
-                # 在数据库中查找与当前人脸最相似的人脸
-                minDistance = 1e9
-                similarPerson = None
-                for knownFeature in knownFeatureList:
-                    distance = self.__GetEuclideanDistance(faceFeature[1], knownFeature[1])
-                    if distance < minDistance and distance < config.threshold:
-                        minDistance = distance
-                        similarPerson = knownFeature
-                if similarPerson is not None:
-                    faceFeature[0] = similarPerson[0]
-
-            self.__DrawRectangleAndText(frame, faceList, faceFeatureList)
+            frame, recognizeList, faceList = self.handle(frame)  # 处理每一帧
             # 显示当前帧中人脸数量
             cv2.putText(frame, "VisitorNumber: " + str(len(faceList)), (20, 100), cv2.FONT_HERSHEY_SIMPLEX,
                         1, (0, 255, 0), 1, cv2.LINE_AA)
@@ -101,9 +78,9 @@ class Recognition:
         :return: 返回处理后的图像和识别到的成员名字
         """
         faceList = self.__DetectFaces(frame, config.detector)
-        retNameList = []
+        retNameList = []  # 识别到的人脸名字列表
         if not faceList:
-            return frame, retNameList
+            return frame, retNameList, faceList
 
         faceFeatureList = []  # 当前帧的人脸特征列表,格式[name, feature(128D)]
         for face in faceList:
@@ -125,7 +102,7 @@ class Recognition:
                 retNameList.append(similarPerson[0])
 
         self.__DrawRectangleAndText(frame, faceList, faceFeatureList)
-        return frame, retNameList
+        return frame, retNameList, faceList
 
 
 recognition = Recognition()  # 创建识别对象, 供其他模块使用

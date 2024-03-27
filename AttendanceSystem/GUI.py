@@ -16,18 +16,22 @@ class AdminGui:
         self.master = master
         master.title("管理员界面")
 
-        # 左侧按钮容器
-        self.left_frame = tk.Frame(master, padx=20, pady=20)
-        self.left_frame.pack(side=tk.LEFT, padx=10, pady=10)
-
         # 在顶部居中显示Label
-        label = tk.Label(master, text="XXX考勤系统界面", font=("Helvetica", 20))
-        label.pack(side=tk.TOP, pady=10)
+        self.title = ttk.Label(master, text="人脸识别考勤系统界面", font=("Helvetica", 15))
+        self.title.pack(side=tk.TOP, pady=10)
+
+        # 左上角显示当前时间
+        self.timeLabel = ttk.Label(master, text=datetime.now().strftime('%Y-%m-%d %H:%M:%S'), font=("Helvetica", 15))
+        self.timeLabel.pack(side=tk.TOP, pady=10)
+
+        # 左侧按钮容器
+        self.left_frame = tk.Frame(master)
+        self.left_frame.pack(side=tk.LEFT, padx=10, pady=10)
 
         # 创建按钮样式
         self.style = ttk.Style()
         # 设置按钮样式，包括宽度和高度
-        self.style.configure("TButton", padding=(10, 5, 10, 5), width=30, height=15)
+        self.style.configure("TButton", padding=(10, 5, 10, 5), width=35, height=15)
 
         # 左侧按钮
         self.btnAdd = ttk.Button(self.left_frame, text="新增人员", command=self.addPerson, style="TButton")
@@ -41,14 +45,16 @@ class AdminGui:
         self.btnDelete.grid(row=3, column=0, pady=10)
 
         # 登录界面
-        self.loginNameLabel = ttk.Label(self.left_frame, text="用户名:")
-        self.loginNameEntry = ttk.Entry(self.left_frame)
+        self.loginNameLabel = ttk.Label(self.left_frame, text="用户名: ", font=("Helvetica", 15), justify=tk.LEFT)
+        self.loginNameEntry = ttk.Entry(self.left_frame, width=20)
         self.loginNameLabel.grid(row=4, column=0, padx=10, pady=10)
         self.loginNameEntry.grid(row=4, column=1, padx=10, pady=10)
-        self.loginPasswordLabel = Label(self.left_frame, text="密码:")
-        self.loginPasswordEntry = Entry(self.left_frame)
+
+        self.loginPasswordLabel = Label(self.left_frame, text=" 密码: ", font=("Helvetica", 15), justify=tk.LEFT)
+        self.loginPasswordEntry = Entry(self.left_frame, show='*', width=20)
         self.loginPasswordLabel.grid(row=5, column=0, padx=10, pady=10)
         self.loginPasswordEntry.grid(row=5, column=1, padx=10, pady=10)
+
         self.loginButton = ttk.Button(self.left_frame, text="登录", command=self.login, style="TButton")
         self.loginButton.grid(row=6, column=0, pady=10)
 
@@ -56,39 +62,45 @@ class AdminGui:
         self.signInButton = tk.Button(self.left_frame, text="签到", command=self.signIn, width=10, height=1)
         self.signInButton.grid(row=10, column=0, padx=10, pady=10, sticky=tk.W)
         self.signOutButton = tk.Button(self.left_frame, text="签退", command=self.signOut, width=10, height=1)
-        self.signOutButton.grid(row=10, column=1, padx=10, pady=10)
+        self.signOutButton.grid(row=10, column=1, padx=10, pady=10, sticky=tk.E)
 
         # 右侧摄像头输入流显示框
         self.videoLabel = ttk.Label(master)
         self.videoLabel.pack(side=tk.RIGHT, padx=10)
 
-        # 打开摄像头
-        self.cap = cv2.VideoCapture(0)
-        self.showVideo()
+        # 登录失败提示
+        self.loginFailLabel = ttk.Label(self.left_frame, text="", foreground='red', font=("Helvetica", 15))
+        self.loginFailLabel.grid(row=6, column=0, pady=10, columnspan=2)
+
+        # 签到提示
+        self.signTooltipLabel = ttk.Label(self.left_frame, text="", foreground='red', font=("Helvetica", 15))
+        self.signTooltipLabel.grid(row=12, column=0, pady=10, columnspan=2)
+
+        # 退出登录按钮
+        self.logoutButton = ttk.Button(self.left_frame, text="退出登录", command=self.showLoginSection, style="TButton")
+        self.logoutButton.grid(row=13, column=0, pady=10, columnspan=2)
 
         # 默认显示登录界面
         self.showLoginSection()
 
-        # 登录失败提示
-        self.loginFailLabel = ttk.Label(self.left_frame, text="", foreground='red',
-                                        font=("Helvetica", 15))
-        self.loginFailLabel.grid(row=6, column=0, pady=10, columnspan=2)
+        # 打开摄像头
+        self.cap = cv2.VideoCapture(0)
+        self.update()
 
-        # 签到提示
-        self.signTooltipLabel = ttk.Label(self.left_frame, text="", foreground='red',
-                                          font=("Helvetica", 15))
-        self.signTooltipLabel.grid(row=12, column=0, pady=10, columnspan=2)
-
-    def showVideo(self):
+    def update(self):
+        # 更新时间
+        self.timeLabel.configure(text=datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+        # 更新视频流
         self.retNameList = []
         _, frame = self.cap.read()
-        frame, self.retNameList = recognition.handle(frame)
+        frame, self.retNameList, _ = recognition.handle(frame)
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         img = Image.fromarray(frame)
         imgtk = ImageTk.PhotoImage(image=img)
         self.videoLabel.imgtk = imgtk
         self.videoLabel.configure(image=imgtk)
-        self.videoLabel.after(10, self.showVideo)  # 10ms后调用showVideo
+        # 每10ms更新一次
+        self.videoLabel.after(10, self.update)
 
     def showManagerSection(self):
         # 隐藏登录界面
@@ -98,10 +110,16 @@ class AdminGui:
         self.loginPasswordEntry.grid_forget()
         self.loginButton.grid_forget()
         # 显示管理员界面
-        self.btnAdd.grid(row=0, column=0, pady=10)
-        self.btnView.grid(row=1, column=0, pady=10)
-        self.btnEdit.grid(row=2, column=0, pady=10)
-        self.btnDelete.grid(row=3, column=0, pady=10)
+        self.btnAdd.grid(row=0, column=0, pady=10, columnspan=2)
+        self.btnView.grid(row=1, column=0, pady=10, columnspan=2)
+        self.btnEdit.grid(row=2, column=0, pady=10, columnspan=2)
+        self.btnDelete.grid(row=3, column=0, pady=10, columnspan=2)
+        self.logoutButton.grid(row=13, column=0, pady=10, columnspan=2)
+        # 清空所有提示和输入框
+        self.loginFailLabel.configure(text="")
+        self.signTooltipLabel.configure(text="")
+        self.loginNameEntry.delete(0, tk.END)
+        self.loginPasswordEntry.delete(0, tk.END)
 
     def showLoginSection(self):
         # 隐藏管理员界面
@@ -109,12 +127,18 @@ class AdminGui:
         self.btnView.grid_forget()
         self.btnEdit.grid_forget()
         self.btnDelete.grid_forget()
+        self.logoutButton.grid_forget()
         # 显示登录界面
         self.loginNameLabel.grid(row=0, column=0, padx=10, pady=10)
         self.loginNameEntry.grid(row=0, column=1, padx=10, pady=10)
         self.loginPasswordLabel.grid(row=1, column=0, padx=1, pady=10)
         self.loginPasswordEntry.grid(row=1, column=1, padx=1, pady=10)
         self.loginButton.grid(row=2, column=0, columnspan=2, pady=10)
+        # 清空所有提示和输入框
+        self.loginFailLabel.configure(text="")
+        self.signTooltipLabel.configure(text="")
+        self.loginNameEntry.delete(0, tk.END)
+        self.loginPasswordEntry.delete(0, tk.END)
 
     def login(self):
         # 实现登录逻辑
@@ -130,7 +154,7 @@ class AdminGui:
 
     def signIn(self):
         if len(self.retNameList) == 0:
-            self.signTooltipLabel.configure(text="没有检测到人脸", foreground='red')
+            self.signTooltipLabel.configure(text="没有检测到录入的人脸", foreground='red')
             return
         for name in self.retNameList:
             person = manager.GetPersonByName(name)
@@ -143,7 +167,7 @@ class AdminGui:
 
     def signOut(self):
         if len(self.retNameList) == 0:
-            self.signTooltipLabel.configure(text="没有检测到人脸", foreground='red')
+            self.signTooltipLabel.configure(text="没有检测到录入的人脸", foreground='red')
             return
         for name in self.retNameList:
             person = manager.GetPersonByName(name)
