@@ -1,23 +1,16 @@
-from typing import Union
-
 import mysql.connector
 import numpy as np
-from mysql.connector.abstracts import MySQLConnectionAbstract, MySQLCursorAbstract
-from mysql.connector.pooling import PooledMySQLConnection
 
 
 class SqlController:
-    cursor: MySQLCursorAbstract  # 游标
-    __mydb: Union[PooledMySQLConnection, MySQLConnectionAbstract]  # 数据库连接
-
     def __init__(self, host="localhost", user="root", passwd="Aa112211", database="graduation"):
-        self.__mydb = mysql.connector.connect(
+        self.db = mysql.connector.connect(
             host=host,
             user=user,
             passwd=passwd,
             database=database
         )  # 连接数据库
-        self.cursor = self.__mydb.cursor()  # 创建游标
+        self.cursor = self.db.cursor()  # 创建游标
 
     def Insert(self, name: str, feature: np.array) -> None:
         """
@@ -28,13 +21,13 @@ class SqlController:
         sql = "insert into KnownFeatureDataBase (name, feature) values (%s, %s)"
         val = (name, str(list(feature)))
         self.cursor.execute(sql, val)
-        self.__mydb.commit()
+        self.db.commit()
 
     def InsertPerson(self, id: int, name: str, record: dict) -> None:
         sql = "insert into PersonDataBase (id, name, record) values (%s, %s, %s)"
         val = (id, name, str(record))
         self.cursor.execute(sql, val)
-        self.__mydb.commit()
+        self.db.commit()
 
     def Update(self, name: str, feature: np.array) -> None:
         """
@@ -45,13 +38,13 @@ class SqlController:
         sql = "update KnownFeatureDataBase set feature = %s where name = %s"
         val = (str(list(feature)), name)
         self.cursor.execute(sql, val)
-        self.__mydb.commit()
+        self.db.commit()
 
     def UpdatePerson(self, id: int, name, record: dict) -> None:
         sql = "update PersonDataBase set record = %s, name = %s where id = %s"
         val = (str(record), name, id)
         self.cursor.execute(sql, val)
-        self.__mydb.commit()
+        self.db.commit()
 
     def InsertWithJudgeExist(self, name: str, feature: np.array) -> None:
         """
@@ -126,12 +119,12 @@ class SqlController:
         """
         sql = "delete from KnownFeatureDataBase where name = %s"
         self.cursor.execute(sql, (name,))
-        self.__mydb.commit()
+        self.db.commit()
 
     def DeletePerson(self, id: int) -> None:
         sql = "delete from PersonDataBase where id = %s"
         self.cursor.execute(sql, (id,))
-        self.__mydb.commit()
+        self.db.commit()
 
     def GetNewId(self) -> int:
         sql = "select max(id) from PersonDataBase"
@@ -148,7 +141,7 @@ class SqlController:
         return result is not None
 
     def __del__(self):
-        self.__mydb.close()
+        self.db.close()
 
 
 sqlController = SqlController()

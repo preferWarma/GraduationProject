@@ -5,19 +5,20 @@ from tkinter import ttk, Entry, Label, StringVar
 import cv2
 from PIL import Image, ImageTk
 
+import test
 from AttendanceSystem.Manager import manager
 from FaceRecognition.Recognition import recognition
 from SqlController import sqlController
 
 
-class AdminGui:
+class MainGUI:
     def __init__(self, master):
         self.retNameList = []  # 保存识别出的人名列表
         self.master = master
         master.title("管理员界面")
 
         # 在顶部居中显示Label
-        self.title = ttk.Label(master, text="人脸识别考勤系统界面", font=("Helvetica", 15))
+        self.title = ttk.Label(master, text="人脸识别考勤系统界面", font=("Arial", 35), background='white', foreground='orange')
         self.title.pack(side=tk.TOP, pady=10)
 
         # 左上角显示当前时间
@@ -59,9 +60,9 @@ class AdminGui:
         self.loginButton.grid(row=6, column=0, pady=10)
 
         # 签到界面
-        self.signInButton = tk.Button(self.left_frame, text="签到", command=self.signIn, width=10, height=1)
+        self.signInButton = tk.Button(self.left_frame, text="签到", command=self.signIn, width=12, height=2)
         self.signInButton.grid(row=10, column=0, padx=10, pady=10, sticky=tk.W)
-        self.signOutButton = tk.Button(self.left_frame, text="签退", command=self.signOut, width=10, height=1)
+        self.signOutButton = tk.Button(self.left_frame, text="签退", command=self.signOut, width=12, height=2)
         self.signOutButton.grid(row=10, column=1, padx=10, pady=10, sticky=tk.E)
 
         # 右侧摄像头输入流显示框
@@ -184,7 +185,8 @@ class AdminGui:
 
     def queryPerson(self):
         # 实现查看人员信息的逻辑
-        QueryPersonWindow(self.master, self)
+        # QueryPersonWindow(self.master, self)
+        test.QueryWindow(self.master)
 
     def modifyPerson(self):
         # 实现修改人员信息的逻辑
@@ -196,10 +198,10 @@ class AdminGui:
 
 
 class AddPersonWindow(tk.Toplevel):
-    def __init__(self, master, adminGui):
+    def __init__(self, master, parentGUI):
         tk.Toplevel.__init__(self, master)
         self.title("新增人员窗口")
-        self.adminGui = adminGui  # 保存AdminGUI实例
+        self.parentGUI = parentGUI  # 保存AdminGUI实例
 
         # 创建第1行的Label和Entry
         self.labelName = Label(self, text="姓名:")
@@ -222,16 +224,15 @@ class AddPersonWindow(tk.Toplevel):
             self.entryName.insert(0, "未命名")
             return
         # 实现录入人脸的逻辑，可以使用self.personId和self.personName和self.adminGui.cap
-        manager.AddPerson(self.personName, self.adminGui.cap)
+        manager.AddPerson(self.personName, self.parentGUI.cap)
         (Label(self, text="录入成功", foreground='green', font=("Helvetica", 15))
          .grid(row=3, column=0, columnspan=2, pady=10))
 
 
 class DeletePersonWindow(tk.Toplevel):
-    def __init__(self, master, adminGui):
+    def __init__(self, master):
         tk.Toplevel.__init__(self, master)
         self.title("删除人员窗口")
-        self.adminGui = adminGui  # 保存AdminGUI实例
 
         # 创建Label和Entry
         self.labelId = Label(self, text="要删除的人员Id:")
@@ -265,10 +266,9 @@ class DeletePersonWindow(tk.Toplevel):
 
 
 class QueryPersonWindow(tk.Toplevel):
-    def __init__(self, master, adminGui):
+    def __init__(self, master):
         tk.Toplevel.__init__(self, master)
         self.title("查询人员窗口")
-        self.adminGui = adminGui  # 保存AdminGUI实例
 
         # 创建ID输入栏
         self.labelId = ttk.Label(self, text="请输入人员Id:")
@@ -304,10 +304,9 @@ class QueryPersonWindow(tk.Toplevel):
 
 
 class ModifyPersonWindow(tk.Toplevel):
-    def __init__(self, master, adminGui):
+    def __init__(self, master):
         tk.Toplevel.__init__(self, master)
         self.title("修改人员窗口")
-        self.adminGui = adminGui  # 保存AdminGUI实例
 
         # 创建ID输入栏
         self.labelId = Label(self, text="请输入人员Id:")
@@ -458,6 +457,6 @@ class ModifyPersonWindow(tk.Toplevel):
 
 if __name__ == '__main__':
     root = tk.Tk()
-    app = AdminGui(root)
+    app = MainGUI(root)
     root.geometry("1000x600")
     root.mainloop()
