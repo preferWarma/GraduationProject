@@ -1,31 +1,20 @@
 from datetime import datetime, timedelta
 
-import numpy as np
-
 from FaceRecognition.FaceCollect import faceCollect
 from FaceRecognition.FeatureCompute import featureCompute
 
-
 class Person:
-    # 公有变量
-    name: str  # 姓名
-    id: int  # 编号
-    record: dict  # 记录[日期, 记录(签到/签退)]
-
-    # 私有变量
-    __faceInfo: np.array  # 人脸信息
-
     def __init__(self, _name: str, _id: int, _record=None, _faceInfo=None):
         self.name = _name
         self.id = _id
-        self.__faceInfo = _faceInfo
+        self.faceInfo = _faceInfo
         self.record = _record if _record is not None else {}
 
     def SetFaceInfo(self, camera):  # 采集人脸信息, 并存储到数据库
         name, faceImageList = faceCollect.GetFaceListFromVideo(self.name, camera)
         # faceCollect.StorageFaceImageList(name, faceImageList)
-        self.__faceInfo = featureCompute.GetMeanFeature(faceImageList)
-        featureCompute.SaveFeatureToSql([[name, list(self.__faceInfo)]])
+        self.faceInfo = featureCompute.GetMeanFeature(faceImageList)
+        featureCompute.SaveFeatureToSql([[name, list(self.faceInfo)]])
 
     def SignIn(self) -> bool:  # 签到
         today = datetime.now().strftime('%Y-%m-%d')
@@ -107,6 +96,3 @@ if __name__ == '__main__':
     p.SignOut()
     p.SignOut()
     p.printInfo()
-
-
-

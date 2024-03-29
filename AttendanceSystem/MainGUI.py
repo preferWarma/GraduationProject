@@ -5,8 +5,8 @@ from tkinter import ttk, Entry, Label, StringVar
 import cv2
 from PIL import Image, ImageTk
 
-import test
 from AttendanceSystem.Manager import manager
+from AttendanceSystem.QueryWindow import QueryWindow
 from FaceRecognition.Recognition import recognition
 from SqlController import sqlController
 
@@ -185,16 +185,15 @@ class MainGUI:
 
     def queryPerson(self):
         # 实现查看人员信息的逻辑
-        # QueryPersonWindow(self.master, self)
-        test.QueryWindow(self.master)
+        QueryWindow(self.master)
 
     def modifyPerson(self):
         # 实现修改人员信息的逻辑
-        ModifyPersonWindow(self.master, self)
+        ModifyPersonWindow(self.master)
 
     def deletePerson(self):
         # 实现删除人员的逻辑
-        DeletePersonWindow(self.master, self)
+        DeletePersonWindow(self.master)
 
 
 class AddPersonWindow(tk.Toplevel):

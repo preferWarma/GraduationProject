@@ -1,5 +1,11 @@
+import cv2
 import mysql.connector
 import numpy as np
+from dask.sizeof import sizeof
+
+from AttendanceSystem.Employee import AttendanceRecord
+from FaceRecognition.FaceCollect import faceCollect
+from FaceRecognition.FeatureCompute import featureCompute
 
 
 class SqlController:
@@ -12,6 +18,7 @@ class SqlController:
         )  # 连接数据库
         self.cursor = self.db.cursor()  # 创建游标
 
+    # TODO: 需要重构
     def Insert(self, name: str, feature: np.array) -> None:
         """
         插入数据
@@ -133,12 +140,61 @@ class SqlController:
         if selectResult[0] is None:
             return 1
         return selectResult[0] + 1
+    # TODO: 重构到此
+
+    def selectEmployeeBaseInfoById(self, EmployeeID):
+        sql = "select * from employees where EmployeeID = %s"
+        self.cursor.execute(sql, (EmployeeID,))
+        result = self.cursor.fetchone()
+        return result
+
+    def selectEmployeeBaseInfoByName(self, EmployeeName):
+        sql = "select * from employees where Name = %s"
+        self.cursor.execute(sql, (EmployeeName,))
+        result = self.cursor.fetchone()
+        return result
+
+    def setEmployeeFaceInfo(self, EmployeeID, camera):
+        sql = "select name from faceinfo where EmployeeID = %s"
+        self.cursor.execute(sql, (EmployeeID,))
+        result = self.cursor.fetchone()
+        if result is None:
+            return None
+        # 找到员工name
+        name = result[0]
+        # 采集人脸信息
+        _, faceImageList = faceCollect.GetFaceListFromVideo(name, camera)
+        # 计算人脸特征
+        faceInfo = featureCompute.GetMeanFeature(faceImageList)
+        # 更新数据库
+        sql = "update faceinfo set Face_Info = %s where EmployeeID = %s"
+        self.cursor.execute(sql, (str(list(faceInfo)), EmployeeID))
+        self.db.commit()
+        return faceInfo
+
+    def selectAttendanceRecordById(self, EmployeeID):
+        sql = "select * from attendance where EmployeeID = %s"
+        self.cursor.execute(sql, (EmployeeID,))
+        sqlResult = self.cursor.fetchall()
+        # 将查询结果转换为AttendanceRecord对象(签到时间, 签到状态)
+        ret = []
+        for result in sqlResult:
+            ret.append(AttendanceRecord(result[2], result[3]))
+        return ret
 
     def Login(self, userId: str, password: str) -> bool:
         sql = "select * from managerDataBase where id = %s and password = %s"
         self.cursor.execute(sql, (userId, password))
         result = self.cursor.fetchone()
         return result is not None
+
+    def executeWithSql(self, sql: str):
+        self.cursor.execute(sql)
+        self.db.commit()
+
+    def selectWithSql(self, sql: str):
+        self.cursor.execute(sql)
+        return self.cursor.fetchall()
 
     def __del__(self):
         self.db.close()
@@ -147,10 +203,10 @@ class SqlController:
 sqlController = SqlController()
 
 if __name__ == '__main__':
-    # sqlController.Insert("test", np.array([1.5, 2, 3, 4, 5, 6, 7, 8, 9, 10]))
-    # feature = sqlController.Select("test")
-    # print(feature)
-    # features = sqlController.SelectAll()
-    a = sqlController.SelectPersonById(2)
-    print(a)
+    # sqlController.setEmployeeFaceInfo(3, cv2.VideoCapture(0))
+    print(sqlController.selectEmployeeBaseInfoById(3))
+    # print(sqlController.selectEmployeeBaseInfoByName("lyf"))
+    # rec = sqlController.selectAttendanceRecord(3)
+    # for r in rec:
+    #     print(r)
     pass
