@@ -85,7 +85,7 @@ class MainGUI:
         self.showLoginSection()
 
         # 打开摄像头
-        self.cap = cv2.VideoCapture(0)
+        self.camera = cv2.VideoCapture(0)
         self.update()
 
     def update(self):
@@ -93,7 +93,7 @@ class MainGUI:
         self.timeLabel.configure(text=datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
         # 更新视频流
         self.retNameList = []
-        _, frame = self.cap.read()
+        _, frame = self.camera.read()
         frame, self.retNameList, _ = recognition.handle(frame)
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         img = Image.fromarray(frame)
@@ -223,7 +223,7 @@ class AddPersonWindow(tk.Toplevel):
             self.entryName.insert(0, "未命名")
             return
         # 实现录入人脸的逻辑，可以使用self.personId和self.personName和self.adminGui.cap
-        manager.AddPerson(self.personName, self.parentGUI.cap)
+        manager.AddPerson(self.personName, self.parentGUI.camera)
         (Label(self, text="录入成功", foreground='green', font=("Helvetica", 15))
          .grid(row=3, column=0, columnspan=2, pady=10))
 

@@ -154,18 +154,7 @@ class SqlController:
         result = self.cursor.fetchone()
         return result
 
-    def setEmployeeFaceInfo(self, EmployeeID, camera):
-        sql = "select name from faceinfo where EmployeeID = %s"
-        self.cursor.execute(sql, (EmployeeID,))
-        result = self.cursor.fetchone()
-        if result is None:
-            return None
-        # 找到员工name
-        name = result[0]
-        # 采集人脸信息
-        _, faceImageList = faceCollect.GetFaceListFromVideo(name, camera)
-        # 计算人脸特征
-        faceInfo = featureCompute.GetMeanFeature(faceImageList)
+    def setEmployeeFaceInfo(self, EmployeeID, faceInfo):
         # 更新数据库
         sql = "update faceinfo set Face_Info = %s where EmployeeID = %s"
         self.cursor.execute(sql, (str(list(faceInfo)), EmployeeID))

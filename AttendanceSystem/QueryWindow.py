@@ -56,10 +56,10 @@ class QueryWindow(tk.Toplevel):
         self.confirmButton.grid(row=4, column=1)
 
         # 创建一个空白标签, 用于美观
-        self.spaceLabel = tk.Label(self.leftFrame, text="\n\n\n\n\n查询的人员信息将显示如下\n", font=("", 10))
+        self.spaceLabel = tk.Label(self.leftFrame, text="\n\n\n\n查询的人员信息将显示如下\n", font=("", 10))
         self.spaceLabel.grid(row=5, column=0)
 
-        # 创建四个标签，用于显示查询的人员信息
+        # 创建6个标签，用于显示查询的人员信息
         self.idLabel = ttk.Label(self.leftFrame, text="编号", font=("Arial", 10))
         self.idLabel.grid(row=6, column=0)
 
@@ -71,6 +71,12 @@ class QueryWindow(tk.Toplevel):
 
         self.salaryLabel = ttk.Label(self.leftFrame, text="薪资", font=("Arial", 10))
         self.salaryLabel.grid(row=8, column=1)
+
+        self.ageLabel = ttk.Label(self.leftFrame, text="年龄", font=("Arial", 10))
+        self.ageLabel.grid(row=10, column=0)
+
+        self.genderLabel = ttk.Label(self.leftFrame, text="性别", font=("Arial", 10))
+        self.genderLabel.grid(row=10, column=1)
 
         # 创建用于显示查询结果的Entry
         self.idEntry = ttk.Entry(self.leftFrame, width=15)
@@ -84,6 +90,12 @@ class QueryWindow(tk.Toplevel):
 
         self.salaryEntry = ttk.Entry(self.leftFrame, width=15)
         self.salaryEntry.grid(row=9, column=1)
+
+        self.ageEntry = ttk.Entry(self.leftFrame, width=15)
+        self.ageEntry.grid(row=11, column=0)
+
+        self.genderEntry = ttk.Entry(self.leftFrame, width=15)
+        self.genderEntry.grid(row=11, column=1)
 
         # 创建用于显示查询结果的文本框
         self.queryResults = tk.Text(self.rightFrame, width=60, height=30)
@@ -110,7 +122,7 @@ class QueryWindow(tk.Toplevel):
             if baseInfo is None:
                 self.queryResults.insert(tk.END, f"未找到姓名为{inputText}的员工\n")
             else:
-                self.showBaseInfo(baseInfo[0], baseInfo[1], baseInfo[2], baseInfo[3])
+                self.showBaseInfo(baseInfo[0], baseInfo[1], baseInfo[2], baseInfo[3], baseInfo[4], baseInfo[5])
                 self.queryResults.insert(tk.END, f"查询姓名: {inputText}\n")
             # 查询考勤记录
             attendanceRecord = sqlController.selectAttendanceRecordById(baseInfo[0])
@@ -122,13 +134,13 @@ class QueryWindow(tk.Toplevel):
             if baseInfo is None:
                 self.queryResults.insert(tk.END, f"未找到编号为{inputText}的员工\n")
             else:
-                self.showBaseInfo(baseInfo[0], baseInfo[1], baseInfo[2], baseInfo[3])
+                self.showBaseInfo(baseInfo[0], baseInfo[1], baseInfo[2], baseInfo[3], baseInfo[4], baseInfo[5])
                 self.queryResults.insert(tk.END, f"查询编号: {inputText}\n")
             # 查询考勤记录
             attendanceRecord = sqlController.selectAttendanceRecordById(baseInfo[0])
             self.showAttendanceRecord(attendanceRecord)
 
-    def showBaseInfo(self, _id, _name, _position, _salary):
+    def showBaseInfo(self, _id, _name, _position, _salary, _age, _gender):
         # 显示基本信息
         self.idEntry.delete(0, tk.END)
         self.idEntry.insert(0, _id)
@@ -140,7 +152,13 @@ class QueryWindow(tk.Toplevel):
         self.positionEntry.insert(0, _position)
 
         self.salaryEntry.delete(0, tk.END)
-        self.salaryEntry.insert(0, _salary)
+        self.salaryEntry.insert(0, f"{_salary}元/月")
+
+        self.ageEntry.delete(0, tk.END)
+        self.ageEntry.insert(0, f"{_age}岁")
+
+        self.genderEntry.delete(0, tk.END)
+        self.genderEntry.insert(0, "男" if int(_gender) == 0 else "女")
 
     def showAttendanceRecord(self, _record):
         # 显示考勤记录

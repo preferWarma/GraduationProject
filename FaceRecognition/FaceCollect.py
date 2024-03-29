@@ -15,7 +15,7 @@ class FaceCollect:
         self._captureImageCount = captureImageCount
 
     # 共有方法
-    def GetFaceListFromVideo(self, _name: str, camera):
+    def GetFaceListFromVideo(self, camera):
         """
         采集人脸数据
         :return: 人名以及对应的人脸图像列表
@@ -50,7 +50,7 @@ class FaceCollect:
             if len(faceImageList) > self._captureImageCount:
                 break
         # cv2.destroyAllWindows()
-        return _name, faceImageList
+        return faceImageList
 
     def StorageFaceImageList(self, _name: str, faceImageList: list):
         """
@@ -91,11 +91,3 @@ class FaceCollect:
 
 
 faceCollect = FaceCollect()  # 创建人脸采集对象, 供其他模块使用
-
-if __name__ == '__main__':  # 测试代码
-    name, faceList = faceCollect.GetFaceListFromVideo("Cjy", cv2.VideoCapture(0))
-    for face in faceList:
-        cv2.imshow('image', face)  # 显示图片
-        cv2.waitKey(0)  # 等待按键 0 表示无限等待
-        cv2.destroyAllWindows()
-    faceCollect.StorageFaceImageList(name, faceList)

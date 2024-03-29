@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from FaceRecognition.FaceCollect import faceCollect
 from FaceRecognition.FeatureCompute import featureCompute
 
+
 class Person:
     def __init__(self, _name: str, _id: int, _record=None, _faceInfo=None):
         self.name = _name
@@ -11,10 +12,10 @@ class Person:
         self.record = _record if _record is not None else {}
 
     def SetFaceInfo(self, camera):  # 采集人脸信息, 并存储到数据库
-        name, faceImageList = faceCollect.GetFaceListFromVideo(self.name, camera)
+        faceImageList = faceCollect.GetFaceListFromVideo(camera)
         # faceCollect.StorageFaceImageList(name, faceImageList)
         self.faceInfo = featureCompute.GetMeanFeature(faceImageList)
-        featureCompute.SaveFeatureToSql([[name, list(self.faceInfo)]])
+        featureCompute.SaveFeatureToSql([[self.name, list(self.faceInfo)]])
 
     def SignIn(self) -> bool:  # 签到
         today = datetime.now().strftime('%Y-%m-%d')
