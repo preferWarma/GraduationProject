@@ -9,13 +9,14 @@ from AttendanceSystem.Employee import CheckName, CheckPosition, CheckSalary, Che
 from SqlController import sqlController
 
 
-class InsertWindow:
-    def __init__(self, master, parentMaster=None):
-        self.master = master
-        self.parentMaster = parentMaster
+class InsertWindow(tk.Toplevel):
+    def __init__(self, master, camera):
+        super().__init__(master)
+        self.title("增加人员")
 
-        self.master.title("增加人员")
-        self.frame = ttk.Frame(master, padding="10")
+        self.camera = camera
+
+        self.frame = ttk.Frame(self, padding="10")
         self.frame.grid(row=0, column=0)
 
         # 创建标题
@@ -84,7 +85,7 @@ class InsertWindow:
 
     def faceInsertCmd(self):
         print("录入人脸")
-        faceImageList = faceCollect.GetFaceListFromVideo(self.parentMaster.camera)
+        faceImageList = faceCollect.GetFaceListFromVideo(self.camera)
         self.faceInfo = featureCompute.GetMeanFeature(faceImageList)
         self.faceVar.set(1)
 
@@ -142,10 +143,7 @@ class InsertWindow:
 if __name__ == "__main__":
     # 创建主窗口
     root = tk.Tk()
-    root_1 = tk.Tk()
-    root_1.title("摄像头")
-    root_1.camera = cv2.VideoCapture(0)
     # 创建 AddPersonWindow 实例作为主窗口的子窗口
-    insertWindow = InsertWindow(root, root_1)
+    insertWindow = InsertWindow(root, cv2.VideoCapture(0))
     # 开始主循环
     root.mainloop()

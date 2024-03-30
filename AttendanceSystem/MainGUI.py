@@ -31,6 +31,10 @@ class MainGUI:
         self.left_frame = tk.Frame(master)
         self.left_frame.pack(side=tk.LEFT, padx=10, pady=10)
 
+        # 右侧摄像头输入流显示框
+        self.videoLabel = ttk.Label(master)
+        self.videoLabel.pack(side=tk.RIGHT, padx=10)
+
         # 创建按钮样式
         self.style = ttk.Style()
         # 设置按钮样式，包括宽度和高度
@@ -66,10 +70,6 @@ class MainGUI:
         self.signInButton.grid(row=10, column=0, padx=10, pady=10, sticky=tk.W)
         self.signOutButton = tk.Button(self.left_frame, text="签退", command=self.signOut, width=12, height=2)
         self.signOutButton.grid(row=10, column=1, padx=10, pady=10, sticky=tk.E)
-
-        # 右侧摄像头输入流显示框
-        self.videoLabel = ttk.Label(master)
-        self.videoLabel.pack(side=tk.RIGHT, padx=10)
 
         # 登录失败提示
         self.loginFailLabel = ttk.Label(self.left_frame, text="", foreground='red', font=("Helvetica", 15))
@@ -183,7 +183,7 @@ class MainGUI:
 
     def addPerson(self):
         # 实现新增人员的逻辑
-        InsertWindow(self.master, self)
+        InsertWindow(self.master, self.camera)
 
     def queryPerson(self):
         # 实现查看人员信息的逻辑
