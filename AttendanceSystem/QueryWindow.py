@@ -120,25 +120,29 @@ class QueryWindow(tk.Toplevel):
             # Name被勾选
             baseInfo = sqlController.selectEmployeeBaseInfoByName(inputText)
             if baseInfo is None:
+                self.clear()
                 self.queryResults.insert(tk.END, f"未找到姓名为{inputText}的员工\n")
+                return
             else:
                 self.showBaseInfo(baseInfo[0], baseInfo[1], baseInfo[2], baseInfo[3], baseInfo[4], baseInfo[5])
                 self.queryResults.insert(tk.END, f"查询姓名: {inputText}\n")
-            # 查询考勤记录
-            attendanceRecord = sqlController.selectAttendanceRecordById(baseInfo[0])
-            self.showAttendanceRecord(attendanceRecord)
+                # 查询考勤记录
+                attendanceRecord = sqlController.selectAttendanceRecordById(baseInfo[0])
+                self.showAttendanceRecord(attendanceRecord)
 
         elif self.idVar.get() == 1:
             # ID被勾选
             baseInfo = sqlController.selectEmployeeBaseInfoById(inputText)
             if baseInfo is None:
+                self.clear()
                 self.queryResults.insert(tk.END, f"未找到编号为{inputText}的员工\n")
+                return
             else:
-                self.showBaseInfo(baseInfo[0], baseInfo[1], baseInfo[2], baseInfo[3], baseInfo[4], baseInfo[5])
+                self.showBaseInfo(baseInfo[0], baseInfo[1], baseInfo[2], baseInfo[3], baseInfo[4], baseInfo[5]) 
                 self.queryResults.insert(tk.END, f"查询编号: {inputText}\n")
-            # 查询考勤记录
-            attendanceRecord = sqlController.selectAttendanceRecordById(baseInfo[0])
-            self.showAttendanceRecord(attendanceRecord)
+                # 查询考勤记录
+                attendanceRecord = sqlController.selectAttendanceRecordById(baseInfo[0])
+                self.showAttendanceRecord(attendanceRecord)
 
     def showBaseInfo(self, _id, _name, _position, _salary, _age, _gender):
         # 显示基本信息
@@ -174,6 +178,15 @@ class QueryWindow(tk.Toplevel):
             ampm = '上午' if int(time.hour) < 12 else '下午'
             status = '签到' if record.status == 0 else '签退'
             self.queryResults.insert(tk.END, f"{date}\t\t{ampm}\t\t{time}\t\t{status}\n")
+
+    def clear(self):
+        self.idEntry.delete(0, tk.END)
+        self.nameEntry.delete(0, tk.END)
+        self.positionEntry.delete(0, tk.END)
+        self.salaryEntry.delete(0, tk.END)
+        self.ageEntry.delete(0, tk.END)
+        self.genderEntry.delete(0, tk.END)
+        self.queryResults.delete(1.0, tk.END)
 
 
 if __name__ == '__main__':

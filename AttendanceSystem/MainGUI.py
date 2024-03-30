@@ -5,6 +5,8 @@ from tkinter import ttk, Entry, Label, StringVar
 import cv2
 from PIL import Image, ImageTk
 
+from AttendanceSystem.DeleteWindow import DeleteWindow
+from AttendanceSystem.InsertWindow import InsertWindow
 from AttendanceSystem.Manager import manager
 from AttendanceSystem.QueryWindow import QueryWindow
 from FaceRecognition.Recognition import recognition
@@ -181,7 +183,7 @@ class MainGUI:
 
     def addPerson(self):
         # 实现新增人员的逻辑
-        AddPersonWindow(self.master, self)
+        InsertWindow(self.master, self)
 
     def queryPerson(self):
         # 实现查看人员信息的逻辑
@@ -193,7 +195,7 @@ class MainGUI:
 
     def deletePerson(self):
         # 实现删除人员的逻辑
-        DeletePersonWindow(self.master)
+        DeleteWindow(self.master)
 
 
 class AddPersonWindow(tk.Toplevel):

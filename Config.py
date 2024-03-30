@@ -31,8 +31,7 @@ class Config:
             print("人脸识别模型路径不存在")
 
 
-config = Config()  # 创建配置对象, 供其他模
-# 块使用
+config = Config()  # 创建配置对象, 供其他模块使用
 
 if __name__ == '__main__':
     pass

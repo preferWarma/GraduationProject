@@ -140,6 +140,7 @@ class SqlController:
         if selectResult[0] is None:
             return 1
         return selectResult[0] + 1
+
     # TODO: 重构到此
 
     def selectEmployeeBaseInfoById(self, EmployeeID):
@@ -171,6 +172,17 @@ class SqlController:
             ret.append(AttendanceRecord(result[2], result[3]))
         return ret
 
+    def InsertEmployee(self, name, position, salary, age, gender):
+        sql = "INSERT INTO employees (Name, Position, Salary, Age, Gender) VALUES (%s, %s, %s, %s, %s)"
+        self.cursor.execute(sql, (name, position, int(salary), int(age), 0 if gender == "男" else 1))
+        self.db.commit()
+        return self.cursor.lastrowid  # 返回插入的ID
+
+    def DeleteEmployee(self, EmployeeID):
+        sql = "delete from employees where EmployeeID = %s"
+        self.cursor.execute(sql, (EmployeeID,))
+        self.db.commit()
+
     def Login(self, userId: str, password: str) -> bool:
         sql = "select * from managerDataBase where id = %s and password = %s"
         self.cursor.execute(sql, (userId, password))
@@ -193,7 +205,7 @@ sqlController = SqlController()
 
 if __name__ == '__main__':
     # sqlController.setEmployeeFaceInfo(3, cv2.VideoCapture(0))
-    print(sqlController.selectEmployeeBaseInfoById(3))
+    print(sqlController.selectEmployeeBaseInfoById(2))
     # print(sqlController.selectEmployeeBaseInfoByName("lyf"))
     # rec = sqlController.selectAttendanceRecord(3)
     # for r in rec:

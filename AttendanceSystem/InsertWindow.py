@@ -6,6 +6,7 @@ import cv2
 from FaceRecognition.FaceCollect import faceCollect
 from FaceRecognition.FeatureCompute import featureCompute
 from AttendanceSystem.Employee import CheckName, CheckPosition, CheckSalary, CheckAge, CheckGender
+from SqlController import sqlController
 
 
 class InsertWindow:
@@ -97,7 +98,7 @@ class InsertWindow:
 
         # 提示词先清空
         self.tipLabel.config(text="")
-
+        # 优先检查人脸是否录入
         if self.faceVar.get() == 0:
             self.tipLabel.config(text="请先录入人脸")
             return
@@ -105,17 +106,17 @@ class InsertWindow:
         tipLabelText = "以下内容不合法:(请检查后重新输入)\n"
 
         if not CheckName(name):
-            tipLabelText += "姓名\n"
+            tipLabelText += "姓名(只包含字母或中文, 长度不超过50字符)\n"
         if not CheckPosition(position):
-            tipLabelText += "职位\n"
+            tipLabelText += "职位(只包含字母或中文, 长度不超过50字符)\n"
         if not CheckSalary(salary):
-            tipLabelText += "薪资\n"
+            tipLabelText += "薪资(不能为负数)\n"
         if not CheckAge(age):
-            tipLabelText += "年龄\n"
+            tipLabelText += "年龄(介于18-65之间)\n"
         if not CheckGender(gender):
-            tipLabelText += "性别\n"
+            tipLabelText += "性别(不能为空)\n"
 
-        if tipLabelText != "以下内容不合法:(请检查后重新输入)\n":
+        if tipLabelText != "以下内容不合法:(请检查后重新输入)\n":  # 有不合法的输入
             self.tipLabel.config(text=tipLabelText)
             return
 
@@ -123,10 +124,19 @@ class InsertWindow:
         self.faceInsertResultToggle.after(2000, lambda: self.faceVar.set(0))
         self.employeeInsertResultToggle.after(2000, lambda: self.insertVar.set(0))
 
-        # TODO: 添加到数据库
+        # 添加到数据库
+        insertId = sqlController.InsertEmployee(name, position, salary, age, gender)
+        sqlController.setEmployeeFaceInfo(insertId, self.faceInfo)
         # 添加成功提示
-        self.tipLabel.config(text="添加成功")
-        self.tipLabel.after(2000, lambda: self.tipLabel.config(text=""))
+        self.tipLabel.config(text=f"添加成功, 新增人员ID编号为{insertId}")
+        self.tipLabel.after(5000, lambda: self.tipLabel.config(text=""))
+        # 清空录入的信息
+        self.nameEntry.delete(0, tk.END)
+        self.positionEntry.delete(0, tk.END)
+        self.salaryEntry.delete(0, tk.END)
+        self.ageEntry.delete(0, tk.END)
+        self.genderCombobox.set("")
+        self.faceInfo = None
 
 
 if __name__ == "__main__":

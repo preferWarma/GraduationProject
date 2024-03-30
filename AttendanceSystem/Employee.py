@@ -87,7 +87,7 @@ def CheckAge(age: str) -> bool:
         return False
 
     # 检查年龄是否为正整数
-    if not age.isdigit() or int(age) <= 0 or int(age) > 65:
+    if not age.isdigit() or int(age) <= 18 or int(age) > 65:
         return False
 
     return True
