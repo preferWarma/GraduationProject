@@ -127,7 +127,7 @@ class InsertWindow(tk.Toplevel):
 
         # 添加到数据库
         insertId = sqlController.InsertEmployee(name, position, salary, age, gender)
-        sqlController.setEmployeeFaceInfo(insertId, self.faceInfo)
+        sqlController.SetEmployeeFaceInfo(insertId, self.faceInfo)
         # 添加成功提示
         self.tipLabel.config(text=f"添加成功, 新增人员ID编号为{insertId}")
         self.tipLabel.after(5000, lambda: self.tipLabel.config(text=""))

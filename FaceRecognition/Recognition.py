@@ -9,7 +9,7 @@ from SqlController import sqlController
 
 class Recognition:
     def __init__(self):
-        self.knownFeatureList = sqlController.SelectAll()
+        self.knownFeatureList = sqlController.SelectAllFaceInfo()
 
     def __GetEuclideanDistance(self, feature1, feature2) -> float:
         """
@@ -47,7 +47,6 @@ class Recognition:
             cv2.putText(image, name, textPosition, font, 1, textColor, 2)
 
     def Main(self, camera):
-        knownFeatureList = sqlController.SelectAll()
 
         while camera.isOpened():
             start_time = time.time()
@@ -57,7 +56,7 @@ class Recognition:
             if key == ord('q'):
                 break
 
-            frame, recognizeList, faceList = self.handle(frame)  # 处理每一帧
+            frame, _, faceList = self.handle(frame)  # 处理每一帧
             # 显示当前帧中人脸数量
             cv2.putText(frame, "VisitorNumber: " + str(len(faceList)), (20, 100), cv2.FONT_HERSHEY_SIMPLEX,
                         1, (0, 255, 0), 1, cv2.LINE_AA)
@@ -78,9 +77,9 @@ class Recognition:
         :return: 返回处理后的图像和识别到的成员名字
         """
         faceList = self.__DetectFaces(frame, config.detector)
-        retNameList = []  # 识别到的人脸名字列表
+        retInfoList = []  # 识别到的人脸信息列表[(id, name), ...]
         if not faceList:
-            return frame, retNameList, faceList
+            return frame, retInfoList, faceList
 
         faceFeatureList = []  # 当前帧的人脸特征列表,格式[name, feature(128D)]
         for face in faceList:
@@ -92,17 +91,17 @@ class Recognition:
             # 在数据库中查找与当前人脸最相似的人脸
             minDistance = 1e9
             similarPerson = None
-            for knownFeature in self.knownFeatureList:
-                distance = self.__GetEuclideanDistance(faceFeature[1], knownFeature[1])
+            for knownFeature in self.knownFeatureList:  # knownFeatureList: [[id, name, feature(128D)], ...]
+                distance = self.__GetEuclideanDistance(faceFeature[1], knownFeature[2])
                 if distance < minDistance and distance < config.threshold:
                     minDistance = distance
                     similarPerson = knownFeature
             if similarPerson is not None:
-                faceFeature[0] = similarPerson[0]
-                retNameList.append(similarPerson[0])
+                faceFeature[0] = f"{similarPerson[0]}: {similarPerson[1]}"  # 显示id和姓名
+                retInfoList.append((similarPerson[0], similarPerson[1]))
 
         self.__DrawRectangleAndText(frame, faceList, faceFeatureList)
-        return frame, retNameList, faceList
+        return frame, retInfoList, faceList
 
 
 recognition = Recognition()  # 创建识别对象, 供其他模块使用

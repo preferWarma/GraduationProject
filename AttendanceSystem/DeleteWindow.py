@@ -128,7 +128,7 @@ class DeleteWindow(tk.Toplevel):
             if inputText.isspace() or inputText == '':
                 self.queryResults.insert(tk.END, "查询失败姓名不能为空\n")
                 return
-            baseInfo = sqlController.selectEmployeeBaseInfoByName(inputText)
+            baseInfo = sqlController.SelectEmployeeBaseInfoByName(inputText)
             if baseInfo is None:
                 self.queryResults.insert(tk.END, f"未找到姓名为{inputText}的员工\n")
                 return
@@ -136,7 +136,7 @@ class DeleteWindow(tk.Toplevel):
                 self.showBaseInfo(baseInfo[0], baseInfo[1], baseInfo[2], baseInfo[3], baseInfo[4], baseInfo[5])
                 self.queryResults.insert(tk.END, f"查询姓名: {inputText}\n")
                 # 查询考勤记录
-                attendanceRecord = sqlController.selectAttendanceRecordById(baseInfo[0])
+                attendanceRecord = sqlController.SelectAttendanceRecordById(baseInfo[0])
                 self.showAttendanceRecord(attendanceRecord)
                 # 设置确认删除按钮为可用
                 self.confirmDeleteButton["state"] = "normal"
@@ -146,7 +146,7 @@ class DeleteWindow(tk.Toplevel):
             if not inputText.isdigit():
                 self.queryResults.insert(tk.END, "查询失败, 编号需要为数字\n")
                 return
-            baseInfo = sqlController.selectEmployeeBaseInfoById(inputText)
+            baseInfo = sqlController.SelectEmployeeBaseInfoById(inputText)
             if baseInfo is None:
                 self.queryResults.insert(tk.END, f"未找到编号为{inputText}的员工\n")
                 return
@@ -154,7 +154,7 @@ class DeleteWindow(tk.Toplevel):
                 self.showBaseInfo(baseInfo[0], baseInfo[1], baseInfo[2], baseInfo[3], baseInfo[4], baseInfo[5])
                 self.queryResults.insert(tk.END, f"查询编号: {inputText}\n")
                 # 查询考勤记录
-                attendanceRecord = sqlController.selectAttendanceRecordById(baseInfo[0])
+                attendanceRecord = sqlController.SelectAttendanceRecordById(baseInfo[0])
                 self.showAttendanceRecord(attendanceRecord)
                 # 设置确认删除按钮为可用
                 self.confirmDeleteButton["state"] = "normal"

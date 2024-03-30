@@ -118,7 +118,7 @@ class QueryWindow(tk.Toplevel):
         # 根据复选框的状态，执行相应的操作
         if self.nameVar.get() == 1:
             # Name被勾选
-            baseInfo = sqlController.selectEmployeeBaseInfoByName(inputText)
+            baseInfo = sqlController.SelectEmployeeBaseInfoByName(inputText)
             if baseInfo is None:
                 self.clear()
                 self.queryResults.insert(tk.END, f"未找到姓名为{inputText}的员工\n")
@@ -127,12 +127,12 @@ class QueryWindow(tk.Toplevel):
                 self.showBaseInfo(baseInfo[0], baseInfo[1], baseInfo[2], baseInfo[3], baseInfo[4], baseInfo[5])
                 self.queryResults.insert(tk.END, f"查询姓名: {inputText}\n")
                 # 查询考勤记录
-                attendanceRecord = sqlController.selectAttendanceRecordById(baseInfo[0])
+                attendanceRecord = sqlController.SelectAttendanceRecordById(baseInfo[0])
                 self.showAttendanceRecord(attendanceRecord)
 
         elif self.idVar.get() == 1:
             # ID被勾选
-            baseInfo = sqlController.selectEmployeeBaseInfoById(inputText)
+            baseInfo = sqlController.SelectEmployeeBaseInfoById(inputText)
             if baseInfo is None:
                 self.clear()
                 self.queryResults.insert(tk.END, f"未找到编号为{inputText}的员工\n")
@@ -141,7 +141,7 @@ class QueryWindow(tk.Toplevel):
                 self.showBaseInfo(baseInfo[0], baseInfo[1], baseInfo[2], baseInfo[3], baseInfo[4], baseInfo[5]) 
                 self.queryResults.insert(tk.END, f"查询编号: {inputText}\n")
                 # 查询考勤记录
-                attendanceRecord = sqlController.selectAttendanceRecordById(baseInfo[0])
+                attendanceRecord = sqlController.SelectAttendanceRecordById(baseInfo[0])
                 self.showAttendanceRecord(attendanceRecord)
 
     def showBaseInfo(self, _id, _name, _position, _salary, _age, _gender):

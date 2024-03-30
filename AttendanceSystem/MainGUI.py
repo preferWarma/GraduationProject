@@ -7,7 +7,6 @@ from PIL import Image, ImageTk
 
 from AttendanceSystem.DeleteWindow import DeleteWindow
 from AttendanceSystem.InsertWindow import InsertWindow
-from AttendanceSystem.Manager import manager
 from AttendanceSystem.QueryWindow import QueryWindow
 from FaceRecognition.Recognition import recognition
 from SqlController import sqlController
@@ -15,12 +14,13 @@ from SqlController import sqlController
 
 class MainGUI:
     def __init__(self, master):
-        self.retNameList = []  # 保存识别出的人名列表
+        self.retInfoList = []  # 保存识别出的人员信息列表[[id, name], ...]
         self.master = master
         master.title("管理员界面")
 
         # 在顶部居中显示Label
-        self.title = ttk.Label(master, text="人脸识别考勤系统界面", font=("Arial", 35), background='white', foreground='orange')
+        self.title = ttk.Label(master, text="人脸识别考勤系统界面", font=("Arial", 35), background='white',
+                               foreground='orange')
         self.title.pack(side=tk.TOP, pady=10)
 
         # 左上角显示当前时间
@@ -93,15 +93,16 @@ class MainGUI:
     def update(self):
         # 更新时间
         self.timeLabel.configure(text=datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+
         # 更新视频流
-        self.retNameList = []
         _, frame = self.camera.read()
-        frame, self.retNameList, _ = recognition.handle(frame)
+        frame, self.retInfoList, _ = recognition.handle(frame)
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         img = Image.fromarray(frame)
-        imgtk = ImageTk.PhotoImage(image=img)
+        imgtk = ImageTk.PhotoImage(image=img)  # 使用PIL进行图像格式转换, 使其在tkinter中兼容显示
         self.videoLabel.imgtk = imgtk
         self.videoLabel.configure(image=imgtk)
+
         # 每10ms更新一次
         self.videoLabel.after(10, self.update)
 
@@ -149,34 +150,40 @@ class MainGUI:
                 or self.loginNameEntry.get() == '' or self.loginPasswordEntry.get() == '':
             self.loginFailLabel.configure(text="用户名或密码不能为空", foreground='red')
             return
-        if manager.Login(self.loginNameEntry.get(), self.loginPasswordEntry.get()):
+        if sqlController.Login(self.loginNameEntry.get(), self.loginPasswordEntry.get()):
             self.showManagerSection()
             self.loginFailLabel.configure(text="")
         else:
             self.loginFailLabel.configure(text="用户名或密码错误", foreground='red')
 
+    # TODO: 需要修改
     def signIn(self):
-        if len(self.retNameList) == 0:
+        if len(self.retInfoList) == 0:
             self.signTooltipLabel.configure(text="没有检测到录入的人脸", foreground='red')
             return
-        for name in self.retNameList:
-            person = manager.GetPersonByName(name)
+        for info in self.retInfoList:
+            info_id, info_name = info[0], info[1]
+            person = sqlController.SelectEmployeeBaseInfoById(info_id)
             if person is not None:
                 if person.SignIn():
-                    manager.UpdatePerson(person.id, person.name, person.record)
+                    # TODO: 更新数据库
+                    # manager.UpdatePerson(person.id, person.name, person.record)
                     self.signTooltipLabel.configure(text="签到成功", foreground='green')
                 else:
                     self.signTooltipLabel.configure(text="半小时内只能签到一次", foreground='red')
 
+    # TODO: 需要修改
     def signOut(self):
-        if len(self.retNameList) == 0:
+        if len(self.retInfoList) == 0:
             self.signTooltipLabel.configure(text="没有检测到录入的人脸", foreground='red')
             return
-        for name in self.retNameList:
-            person = manager.GetPersonByName(name)
+        for info in self.retInfoList:
+            info_id, info_name = info[0], info[1]
+            person = sqlController.SelectEmployeeBaseInfoById(info_id)
             if person is not None:
                 if person.SignOut():
-                    manager.UpdatePerson(person.id, person.name, person.record)
+                    # TODO: 更新数据库
+                    # manager.UpdatePerson(person.id, person.name, person.record)
                     self.signTooltipLabel.configure(text="签退成功", foreground='green')
                 else:
                     self.signTooltipLabel.configure(text="半小时内只能签退一次", foreground='red')
@@ -197,111 +204,9 @@ class MainGUI:
         # 实现删除人员的逻辑
         DeleteWindow(self.master)
 
-
-class AddPersonWindow(tk.Toplevel):
-    def __init__(self, master, parentGUI):
-        tk.Toplevel.__init__(self, master)
-        self.title("新增人员窗口")
-        self.parentGUI = parentGUI  # 保存AdminGUI实例
-
-        # 创建第1行的Label和Entry
-        self.labelName = Label(self, text="姓名:")
-        self.entryName = Entry(self)
-        self.labelName.grid(row=1, column=0, padx=10, pady=10)
-        self.entryName.grid(row=1, column=1, padx=10, pady=10)
-
-        # 创建录入人脸按钮
-        self.faceButton = ttk.Button(self, text="录入人脸", command=self.recordFace, style="TButton")
-        self.faceButton.grid(row=2, column=0, columnspan=2, pady=10)
-
-        # 成员变量保存Id和姓名
-        self.personId = None
-        self.personName = None
-
-    def recordFace(self):
-        # 获取输入的Id和姓名
-        self.personName = self.entryName.get()
-        if self.personName.isspace() or self.personName == '未命名':
-            self.entryName.insert(0, "未命名")
-            return
-        # 实现录入人脸的逻辑，可以使用self.personId和self.personName和self.adminGui.cap
-        manager.AddPerson(self.personName, self.parentGUI.camera)
-        (Label(self, text="录入成功", foreground='green', font=("Helvetica", 15))
-         .grid(row=3, column=0, columnspan=2, pady=10))
-
-
-class DeletePersonWindow(tk.Toplevel):
-    def __init__(self, master):
-        tk.Toplevel.__init__(self, master)
-        self.title("删除人员窗口")
-
-        # 创建Label和Entry
-        self.labelId = Label(self, text="要删除的人员Id:")
-        self.entryId = Entry(self)
-        self.labelId.grid(row=0, column=0, padx=10, pady=10)
-        self.entryId.grid(row=0, column=1, padx=10, pady=10)
-
-        # 创建删除人员按钮
-        self.deleteButton = tk.Button(self, text="删除人员", command=self.deletePerson)
-        self.deleteButton.grid(row=1, column=0, columnspan=2, pady=10)
-
-        # 成员变量保存要删除的人员Id
-        self.personIdToDelete = None
-        self.toolTip = Label(self, text="请输入要删除的人员Id", font=("Helvetica", 15))
-
-    def deletePerson(self):
-        # 获取输入的要删除的人员Id
-        self.personIdToDelete = int(self.entryId.get())
-        if not self.checkIdExist():
-            self.toolTip.configure(text="Id不存在", foreground='red')
-            self.toolTip.grid(row=2, column=0, columnspan=2, pady=10)
-            return
-        # 实现删除人员的逻辑
-        manager.DeletePerson(self.personIdToDelete)
-        self.toolTip.configure(text="删除成功", foreground='green')
-        self.toolTip.grid(row=2, column=0, columnspan=2, pady=10)
-
-    def checkIdExist(self) -> bool:
-        # 检查输入的Id是否存在
-        return sqlController.SelectPersonById(self.personIdToDelete) is not None
-
-
-class QueryPersonWindow(tk.Toplevel):
-    def __init__(self, master):
-        tk.Toplevel.__init__(self, master)
-        self.title("查询人员窗口")
-
-        # 创建ID输入栏
-        self.labelId = ttk.Label(self, text="请输入人员Id:")
-        self.entryId = ttk.Entry(self)
-        self.labelId.grid(row=0, column=0, padx=10, pady=10)
-        self.entryId.grid(row=0, column=1, padx=10, pady=10)
-
-        # 创建查询按钮
-        self.queryButton = ttk.Button(self, text="查询", command=self.queryPerson)
-        self.queryButton.grid(row=1, column=0, columnspan=2, pady=10)
-
-        # 创建显示查询结果的Label
-        self.resultLabel = ttk.Label(self, text="查询结果将在这里显示", font=("Helvetica", 15), anchor='w')
-        self.resultLabel.grid(column=0, columnspan=2, pady=10)
-
-        # 成员变量保存要查询的人员Id
-        self.personIdToQuery = None
-
-    def queryPerson(self):
-        # 获取输入的要查询的人员Id
-        if not self.entryId.get().isdigit():
-            self.resultLabel.configure(text="请输入正确的ID格式", foreground='red')
-            return
-        self.personIdToQuery = int(self.entryId.get())
-        # 实现查询人员的逻辑
-        person = manager.GetPersonById(self.personIdToQuery)
-        # 根据实际情况更新self.resultLabel的文本
-        if person is None:
-            self.resultLabel.configure(text="Id不存在", foreground='red')
-            return
-        self.resultLabel.configure(text=f"姓名: {person.name}\n签到记录: \n{person.recordToString()}",
-                                   foreground='black')
+    def __del__(self):
+        self.camera.release()
+        cv2.destroyAllWindows()
 
 
 class ModifyPersonWindow(tk.Toplevel):
@@ -403,7 +308,8 @@ class ModifyPersonWindow(tk.Toplevel):
             self.resultLabel.configure(text="请输入正确的ID格式", foreground='red')
             return False
         self.personIdToModify = int(self.personIdToModify)
-        self.personToModify = manager.GetPersonById(self.personIdToModify)
+        # TODO:需要修改
+        # self.personToModify = manager.GetPersonById(self.personIdToModify)
         # 根据实际情况更新self.resultLabel的文本
         if self.personToModify is None:
             self.resultLabel.configure(text="Id不存在", foreground='red')
@@ -422,7 +328,8 @@ class ModifyPersonWindow(tk.Toplevel):
         if newName.isspace() or newName == '未命名':
             self.newNameEntry.insert(0, "未命名")
             return
-        manager.UpdatePerson(self.personIdToModify, newName, self.personToModify.record)
+        # TODO:需要修改
+        # manager.UpdatePerson(self.personIdToModify, newName, self.personToModify.record)
         self.resultLabel.configure(text="姓名修改成功", foreground='green')
 
     def checkDateTimeFormat(self) -> bool:
@@ -444,7 +351,8 @@ class ModifyPersonWindow(tk.Toplevel):
         if self.checkDateTimeFormat():
             if self.checkPersonExist():
                 self.personToModify.SignInWithTime(self.dateEntry.get(), self.timeEntry.get())
-                manager.UpdatePerson(self.personIdToModify, self.personToModify.name, self.personToModify.record)
+                # TODO:需要修改
+                # manager.UpdatePerson(self.personIdToModify, self.personToModify.name, self.personToModify.record)
                 self.resultLabel.configure(text="签到成功", foreground='green')
 
     def signOut(self):
@@ -452,7 +360,8 @@ class ModifyPersonWindow(tk.Toplevel):
         if self.checkDateTimeFormat():
             if self.checkPersonExist():
                 self.personToModify.SignOutWithTime(self.dateEntry.get(), self.timeEntry.get())
-                manager.UpdatePerson(self.personIdToModify, self.personToModify.name, self.personToModify.record)
+                # TODO:需要修改
+                # manager.UpdatePerson(self.personIdToModify, self.personToModify.name, self.personToModify.record)
                 self.resultLabel.configure(text="签退成功", foreground='green')
 
 

@@ -9,10 +9,9 @@ from Config import config
 
 class FaceCollect:
     # 私有属性
-    _captureImageCount: int  # 存储人脸特征图像张数
 
     def __init__(self, captureImageCount: int = config.captureImageCount):
-        self._captureImageCount = captureImageCount
+        self.captureImageCount = captureImageCount
 
     # 共有方法
     def GetFaceListFromVideo(self, camera):
@@ -47,9 +46,9 @@ class FaceCollect:
             faceImage = cv2.resize(faceImage, (config.imageSize, config.imageSize))
             faceImageList.append(faceImage)
 
-            if len(faceImageList) > self._captureImageCount:
+            if len(faceImageList) > self.captureImageCount:
                 break
-        # cv2.destroyAllWindows()
+        cv2.destroyAllWindows()
         return faceImageList
 
     def StorageFaceImageList(self, _name: str, faceImageList: list):
