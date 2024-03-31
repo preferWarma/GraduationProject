@@ -20,7 +20,7 @@ class MainGUI:
         master.title("管理员界面")
 
         # 在顶部居中显示Label
-        self.title = ttk.Label(master, text="人脸识别考勤系统界面", font=("Arial", 35), background='white',
+        self.title = ttk.Label(master, text="人脸识别考勤系统界面", font=("", 35), background='white',
                                foreground='orange')
         self.title.pack(side=tk.TOP, pady=10)
 
@@ -53,12 +53,12 @@ class MainGUI:
         self.btnDelete.grid(row=3, column=0, pady=10)
 
         # 登录界面
-        self.loginNameLabel = ttk.Label(self.left_frame, text="用户名: ", font=("Helvetica", 15), justify=tk.LEFT)
+        self.loginNameLabel = ttk.Label(self.left_frame, text="用户名: ", font=("bold", 15), justify=tk.LEFT)
         self.loginNameEntry = ttk.Entry(self.left_frame, width=20)
         self.loginNameLabel.grid(row=4, column=0, padx=10, pady=10)
         self.loginNameEntry.grid(row=4, column=1, padx=10, pady=10)
 
-        self.loginPasswordLabel = Label(self.left_frame, text=" 密码: ", font=("Helvetica", 15), justify=tk.LEFT)
+        self.loginPasswordLabel = Label(self.left_frame, text=" 密码: ", font=("bold", 15), justify=tk.LEFT)
         self.loginPasswordEntry = Entry(self.left_frame, show='*', width=20)
         self.loginPasswordLabel.grid(row=5, column=0, padx=10, pady=10)
         self.loginPasswordEntry.grid(row=5, column=1, padx=10, pady=10)
@@ -73,11 +73,11 @@ class MainGUI:
         self.signOutButton.grid(row=10, column=1, padx=10, pady=10, sticky=tk.E)
 
         # 登录失败提示
-        self.loginFailLabel = ttk.Label(self.left_frame, text="", foreground='red', font=("Helvetica", 15))
+        self.loginFailLabel = ttk.Label(self.left_frame, text="", foreground='red', font=("", 15))
         self.loginFailLabel.grid(row=6, column=0, pady=10, columnspan=2)
 
         # 签到提示
-        self.signTooltipLabel = ttk.Label(self.left_frame, text="", foreground='red', font=("Helvetica", 15))
+        self.signTooltipLabel = ttk.Label(self.left_frame, text="", foreground='red', font=("", 10))
         self.signTooltipLabel.grid(row=12, column=0, pady=10, columnspan=2)
 
         # 退出登录按钮
@@ -157,37 +157,43 @@ class MainGUI:
         else:
             self.loginFailLabel.configure(text="用户名或密码错误", foreground='red')
 
-    # TODO: 需要修改
     def signIn(self):
         if len(self.retInfoList) == 0:
             self.signTooltipLabel.configure(text="没有检测到录入的人脸", foreground='red')
+            self.signTooltipLabel.after(5000, lambda: self.signTooltipLabel.configure(text=""))  # 5s后清空
             return
+        toolTipText = ""  # 提示信息
         for info in self.retInfoList:
             info_id, info_name = info[0], info[1]
-            person = sqlController.SelectEmployeeBaseInfoById(info_id)
-            if person is not None:
-                if person.SignIn():
-                    # TODO: 更新数据库
-                    # manager.UpdatePerson(person.id, person.name, person.record)
-                    self.signTooltipLabel.configure(text="签到成功", foreground='green')
-                else:
-                    self.signTooltipLabel.configure(text="半小时内只能签到一次", foreground='red')
+            lastSignInTime = sqlController.GetLastSignInTime(info_id)
+            if lastSignInTime is not None and (datetime.now() - lastSignInTime).seconds < 1800:
+                toolTipText += f"{info_name}半小时内已签到, 请勿重复签到\n"
+            else:
+                # 满足签到条件, 进行签到, 并更新数据库
+                sqlController.InsertAttendanceRecord(info_id, datetime.now().strftime('%Y-%m-%d %H:%M:%S'), 0)
+                toolTipText += f"{info_name}签到成功\n"
+        # 提示签到结果
+        self.signTooltipLabel.configure(text=toolTipText, foreground='black')
+        self.signTooltipLabel.after(10000, lambda: self.signTooltipLabel.configure(text=""))  # 10s后清空
 
-    # TODO: 需要修改
     def signOut(self):
         if len(self.retInfoList) == 0:
             self.signTooltipLabel.configure(text="没有检测到录入的人脸", foreground='red')
+            self.signTooltipLabel.after(5000, lambda: self.signTooltipLabel.configure(text=""))
             return
+        toolTipText = ""  # 提示信息
         for info in self.retInfoList:
             info_id, info_name = info[0], info[1]
-            person = sqlController.SelectEmployeeBaseInfoById(info_id)
-            if person is not None:
-                if person.SignOut():
-                    # TODO: 更新数据库
-                    # manager.UpdatePerson(person.id, person.name, person.record)
-                    self.signTooltipLabel.configure(text="签退成功", foreground='green')
-                else:
-                    self.signTooltipLabel.configure(text="半小时内只能签退一次", foreground='red')
+            lastSignOutTime = sqlController.GetLastSignOutTime(info_id)
+            if lastSignOutTime is not None and (datetime.now() - lastSignOutTime).seconds < 1800:
+                toolTipText += f"{info_name}半小时内已签退, 请勿重复签退\n"
+            else:
+                # 满足签退条件, 进行签退, 并更新数据库
+                sqlController.InsertAttendanceRecord(info_id, datetime.now().strftime('%Y-%m-%d %H:%M:%S'), 1)
+                toolTipText += f"{info_name}签退成功\n"
+        # 提示签退结果
+        self.signTooltipLabel.configure(text=toolTipText, foreground='black')
+        self.signTooltipLabel.after(10000, lambda: self.signTooltipLabel.configure(text=""))  # 10s后清空
 
     def addPerson(self):
         # 实现新增人员的逻辑

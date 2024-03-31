@@ -1,4 +1,5 @@
-import datetime
+from datetime import datetime
+from typing import Optional
 
 import mysql.connector
 import numpy as np
@@ -15,15 +16,6 @@ class SqlController:
             database=database
         )  # 连接数据库
         self.cursor = self.db.cursor()  # 创建游标
-
-    # TODO: 需要重构
-    def UpdatePerson(self, id: int, name, record: dict) -> None:
-        sql = "update PersonDataBase set record = %s, name = %s where id = %s"
-        val = (str(record), name, id)
-        self.cursor.execute(sql, val)
-        self.db.commit()
-
-    # TODO: 重构到此
 
     def SelectEmployeeBaseInfoById(self, EmployeeID):
         sql = "select * from employees where EmployeeID = %s"
@@ -98,6 +90,38 @@ class SqlController:
         result = self.cursor.fetchone()
         return result is not None
 
+    def SignIn(self, EmployeeID):
+        now_datetime = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        self.InsertAttendanceRecord(EmployeeID, now_datetime, 1)
+
+    def SignOut(self, EmployeeID):
+        now_datetime = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        self.InsertAttendanceRecord(EmployeeID, now_datetime, 0)
+
+    def GetLastSignInTime(self, EmployeeID) -> Optional[datetime]:
+        """
+        获取最后一次签到时间, 返回的是None或者datetime
+        """
+        sql = ("select * from attendance where EmployeeID = %s and AttendanceType = 0 "
+               "order by AttendanceDateTime desc limit 1")
+        self.cursor.execute(sql, (EmployeeID,))
+        result = self.cursor.fetchone()  # 返回的是一个元组(AttendanceID, EmployeeID, AttendanceDateTime, AttendanceType)
+        if result is None:
+            return None
+        return result[2]
+
+    def GetLastSignOutTime(self, EmployeeID) -> Optional[datetime]:
+        """
+        获取最后一次签退时间, 返回的是None或者datetime
+        """
+        sql = ("select * from attendance where EmployeeID = %s and AttendanceType = 1 "
+               "order by AttendanceDateTime desc limit 1")
+        self.cursor.execute(sql, (EmployeeID,))
+        result = self.cursor.fetchone()  # 返回的是一个元组(AttendanceID, EmployeeID, AttendanceDateTime, AttendanceType)
+        if result is None:
+            return None
+        return result[2]
+
     def ExecuteWithSql(self, sql: str):
         self.cursor.execute(sql)
         self.db.commit()
@@ -114,10 +138,11 @@ sqlController = SqlController()
 
 if __name__ == '__main__':
     info = sqlController.SelectEmployeeBaseInfoByName("lyf")
-    print(info)
-    # now_datetime = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    # sqlController.InsertAttendanceRecord(info[0], now_datetime, 1)
-    sqlController.UpdateEmployeeBaseInfo(info[0], "cjy", "student", 10000, 20, 1)
-    print(sqlController.SelectEmployeeBaseInfoByName("cjy"))
-
+    print(info)  # info = (EmployeeID, Name, Position, Salary, Age, Gender)
+    attendanceList = sqlController.SelectAttendanceRecordById(info[0])
+    for record in attendanceList:
+        print(record.__str__())
+    last_in = sqlController.GetLastSignInTime(info[0])
+    last_out = sqlController.GetLastSignOutTime(info[0])
+    print(f"{last_in}与{last_out}直接的时间差为{last_in - last_out}")
     pass

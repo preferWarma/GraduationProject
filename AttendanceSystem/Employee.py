@@ -1,10 +1,10 @@
 class AttendanceRecord:
-    def __init__(self, datetime, status):
+    def __init__(self, datetime, type):
         self.datetime = datetime  # 签到时间
-        self.status = status  # 签到状态(0: 签到/1: 签退)
+        self.type = type  # 签到状态(0: 签到/1: 签退)
 
     def __str__(self):
-        return str(self.datetime) + ' ' + ('签到' if self.status == 0 else '签退')
+        return str(self.datetime) + ' ' + ('签到' if self.type == 0 else '签退')
 
 
 class Employee:
