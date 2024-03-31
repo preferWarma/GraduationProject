@@ -180,6 +180,7 @@ class QueryWindow(tk.Toplevel):
             self.queryResults.insert(tk.END, f"{date}\t\t{ampm}\t\t{time}\t\t{status}\n")
 
     def clear(self):
+        self.idEntry["state"] = "normal"
         self.idEntry.delete(0, tk.END)
         self.nameEntry.delete(0, tk.END)
         self.positionEntry.delete(0, tk.END)

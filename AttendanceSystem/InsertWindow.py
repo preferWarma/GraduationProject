@@ -6,6 +6,7 @@ import cv2
 from FaceRecognition.FaceCollect import faceCollect
 from FaceRecognition.FeatureCompute import featureCompute
 from AttendanceSystem.Employee import CheckName, CheckPosition, CheckSalary, CheckAge, CheckGender
+from FaceRecognition.Recognition import recognition
 from SqlController import sqlController
 
 
@@ -127,7 +128,7 @@ class InsertWindow(tk.Toplevel):
 
         # 添加到数据库
         insertId = sqlController.InsertEmployee(name, position, salary, age, gender)
-        sqlController.SetEmployeeFaceInfo(insertId, self.faceInfo)
+        sqlController.UpdateEmployeeFaceInfo(insertId, self.faceInfo)
         # 添加成功提示
         self.tipLabel.config(text=f"添加成功, 新增人员ID编号为{insertId}")
         self.tipLabel.after(5000, lambda: self.tipLabel.config(text=""))
@@ -138,6 +139,8 @@ class InsertWindow(tk.Toplevel):
         self.ageEntry.delete(0, tk.END)
         self.genderCombobox.set("")
         self.faceInfo = None
+        # 更新当前程序中人脸识别所用的数据库信息
+        recognition.updateKnownFeatureList()
 
 
 if __name__ == "__main__":

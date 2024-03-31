@@ -8,6 +8,7 @@ from PIL import Image, ImageTk
 from AttendanceSystem.DeleteWindow import DeleteWindow
 from AttendanceSystem.InsertWindow import InsertWindow
 from AttendanceSystem.QueryWindow import QueryWindow
+from AttendanceSystem.ModifyWindow import ModifyWindow
 from FaceRecognition.Recognition import recognition
 from SqlController import sqlController
 
@@ -198,7 +199,7 @@ class MainGUI:
 
     def modifyPerson(self):
         # 实现修改人员信息的逻辑
-        ModifyPersonWindow(self.master)
+        ModifyWindow(self.master)
 
     def deletePerson(self):
         # 实现删除人员的逻辑

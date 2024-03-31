@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 
+from FaceRecognition.Recognition import recognition
 from SqlController import sqlController
 
 
@@ -127,10 +128,13 @@ class DeleteWindow(tk.Toplevel):
             # Name被勾选
             if inputText.isspace() or inputText == '':
                 self.queryResults.insert(tk.END, "查询失败姓名不能为空\n")
+                self.confirmDeleteButton["state"] = "disabled"
                 return
             baseInfo = sqlController.SelectEmployeeBaseInfoByName(inputText)
             if baseInfo is None:
+                self.clear()
                 self.queryResults.insert(tk.END, f"未找到姓名为{inputText}的员工\n")
+                self.confirmDeleteButton["state"] = "disabled"
                 return
             else:
                 self.showBaseInfo(baseInfo[0], baseInfo[1], baseInfo[2], baseInfo[3], baseInfo[4], baseInfo[5])
@@ -144,11 +148,14 @@ class DeleteWindow(tk.Toplevel):
         elif self.idVar.get() == 1:
             # ID被勾选
             if not inputText.isdigit():
+                self.clear()
                 self.queryResults.insert(tk.END, "查询失败, 编号需要为数字\n")
+                self.confirmDeleteButton["state"] = "disabled"
                 return
             baseInfo = sqlController.SelectEmployeeBaseInfoById(inputText)
             if baseInfo is None:
                 self.queryResults.insert(tk.END, f"未找到编号为{inputText}的员工\n")
+                self.confirmDeleteButton["state"] = "disabled"
                 return
             else:
                 self.showBaseInfo(baseInfo[0], baseInfo[1], baseInfo[2], baseInfo[3], baseInfo[4], baseInfo[5])
@@ -166,11 +173,15 @@ class DeleteWindow(tk.Toplevel):
         self.clear()    # 清空原有的显示信息
         self.queryResults.insert(tk.END, f"编号为{deleteId}的员工信息已删除\n")
         self.confirmDeleteButton["state"] = "disabled"
+        # 更新当前程序中人脸识别所用的数据库信息
+        recognition.updateKnownFeatureList()
 
     def showBaseInfo(self, _id, _name, _position, _salary, _age, _gender):
         # 显示基本信息
+        self.idEntry["state"] = "normal"    # 设置为可写, 用于显示信息
         self.idEntry.delete(0, tk.END)
         self.idEntry.insert(0, _id)
+        self.idEntry["state"] = "readonly"  # 设置为只读, 防止误操作
 
         self.nameEntry.delete(0, tk.END)
         self.nameEntry.insert(0, _name)
@@ -203,6 +214,7 @@ class DeleteWindow(tk.Toplevel):
             self.queryResults.insert(tk.END, f"{date}\t\t{ampm}\t\t{time}\t\t{status}\n")
 
     def clear(self):
+        self.idEntry["state"] = "normal"
         self.idEntry.delete(0, tk.END)
         self.nameEntry.delete(0, tk.END)
         self.positionEntry.delete(0, tk.END)

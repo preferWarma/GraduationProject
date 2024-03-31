@@ -79,12 +79,18 @@ class SqlController:
         self.cursor.execute(sql, (EmployeeID,))
         self.db.commit()
 
-    def SetEmployeeFaceInfo(self, EmployeeID, faceInfo):
+    def UpdateEmployeeFaceInfo(self, EmployeeID, faceInfo):
         # 更新数据库
         sql = "update faceinfo set Face_Info = %s where EmployeeID = %s"
         self.cursor.execute(sql, (str(list(faceInfo)), EmployeeID))
         self.db.commit()
         return faceInfo
+
+    def UpdateEmployeeBaseInfo(self, id, name, position, salary, age, gender):
+        # 更新人员的基本信息
+        sql = "UPDATE employees SET Name = %s, Position = %s, Salary = %s, Age = %s, Gender = %s WHERE EmployeeID = %s"
+        self.cursor.execute(sql, (name, position, salary, age, gender, id))
+        self.db.commit()
 
     def Login(self, userId: str, password: str) -> bool:
         sql = "select * from managerDataBase where id = %s and password = %s"
@@ -109,6 +115,9 @@ sqlController = SqlController()
 if __name__ == '__main__':
     info = sqlController.SelectEmployeeBaseInfoByName("lyf")
     print(info)
-    now_datetime = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    sqlController.InsertAttendanceRecord(info[0], now_datetime, 1)
+    # now_datetime = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    # sqlController.InsertAttendanceRecord(info[0], now_datetime, 1)
+    sqlController.UpdateEmployeeBaseInfo(info[0], "cjy", "student", 10000, 20, 1)
+    print(sqlController.SelectEmployeeBaseInfoByName("cjy"))
+
     pass

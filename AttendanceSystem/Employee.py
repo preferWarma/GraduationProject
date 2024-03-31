@@ -65,6 +65,9 @@ def CheckSalary(salary: str) -> bool:
     :param salary: 薪资
     :return: True: 合法/False: 不合法
     """
+    # 去掉薪资中的"元/月"
+    salary = salary.replace('元/月', '')
+
     # 检查薪资是否为空
     if not salary or salary.isspace() or salary == '':
         return False
@@ -82,6 +85,9 @@ def CheckAge(age: str) -> bool:
     :param age: 年龄
     :return: True: 合法/False: 不合法
     """
+    # 去掉年龄中的"岁"
+    age = age.replace('岁', '')
+
     # 检查年龄是否为空
     if not age or age.isspace() or age == '':
         return False

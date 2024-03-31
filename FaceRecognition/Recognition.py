@@ -11,6 +11,9 @@ class Recognition:
     def __init__(self):
         self.knownFeatureList = sqlController.SelectAllFaceInfo()
 
+    def updateKnownFeatureList(self):   # 更新已知人脸特征列表, 在数据库中添加/删除/修改新的人脸信息后调用
+        self.knownFeatureList = sqlController.SelectAllFaceInfo()
+
     def __GetEuclideanDistance(self, feature1, feature2) -> float:
         """
         计算欧式距离
