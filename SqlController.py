@@ -109,11 +109,11 @@ class SqlController:
 
     def SignIn(self, EmployeeID):
         now_datetime = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        self.InsertAttendanceRecord(EmployeeID, now_datetime, 1)
+        self.InsertAttendanceRecord(EmployeeID, now_datetime, 0)
 
     def SignOut(self, EmployeeID):
         now_datetime = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        self.InsertAttendanceRecord(EmployeeID, now_datetime, 0)
+        self.InsertAttendanceRecord(EmployeeID, now_datetime, 1)
 
     def GetLastSignInTime(self, EmployeeID) -> Optional[datetime]:
         """

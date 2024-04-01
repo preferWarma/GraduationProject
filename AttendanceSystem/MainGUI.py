@@ -63,7 +63,7 @@ class MainGUI:
         self.loginPasswordLabel.grid(row=5, column=0, padx=10, pady=10)
         self.loginPasswordEntry.grid(row=5, column=1, padx=10, pady=10)
 
-        self.loginButton = ttk.Button(self.left_frame, text="登录", command=self.login, style="TButton")
+        self.loginButton = ttk.Button(self.left_frame, text="管理员登录", command=self.login, style="TButton")
         self.loginButton.grid(row=6, column=0, pady=10)
 
         # 签到界面
@@ -170,7 +170,7 @@ class MainGUI:
                 toolTipText += f"{info_name}半小时内已签到, 请勿重复签到\n"
             else:
                 # 满足签到条件, 进行签到, 并更新数据库
-                sqlController.InsertAttendanceRecord(info_id, datetime.now().strftime('%Y-%m-%d %H:%M:%S'), 0)
+                sqlController.SignIn(info_id)
                 toolTipText += f"{info_name}签到成功\n"
         # 提示签到结果
         self.signTooltipLabel.configure(text=toolTipText, foreground='black')
@@ -189,7 +189,7 @@ class MainGUI:
                 toolTipText += f"{info_name}半小时内已签退, 请勿重复签退\n"
             else:
                 # 满足签退条件, 进行签退, 并更新数据库
-                sqlController.InsertAttendanceRecord(info_id, datetime.now().strftime('%Y-%m-%d %H:%M:%S'), 1)
+                sqlController.SignOut(info_id)
                 toolTipText += f"{info_name}签退成功\n"
         # 提示签退结果
         self.signTooltipLabel.configure(text=toolTipText, foreground='black')

@@ -30,7 +30,7 @@ class InsertRecordWindow(tk.Toplevel):
         self.parent = parent
 
         self.title("选择时间")
-        self.geometry("220x275")
+        self.geometry("265x275")
 
         # 添加窗口关闭的回调函数
         self.onExit = onExit

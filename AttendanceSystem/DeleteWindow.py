@@ -3,7 +3,7 @@ from tkinter import ttk
 
 from FaceRecognition.Recognition import recognition
 from SqlController import sqlController
-from GUIHelper import AddScrollbarToText
+from AttendanceSystem.GUIHelper import AddScrollbarToText
 
 
 class DeleteWindow(tk.Toplevel):
