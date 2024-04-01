@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 
+from AttendanceSystem.GUIHelper import AddScrollbarToText
 from SqlController import sqlController
 
 
@@ -100,6 +101,8 @@ class QueryWindow(tk.Toplevel):
         # 创建用于显示查询结果的文本框
         self.queryResults = tk.Text(self.rightFrame, width=60, height=30)
         self.queryResults.grid(row=0, column=0)
+        # 为文本框添加滚动条
+        AddScrollbarToText(self.queryResults)
 
     def nameSelectCmd(self):
         # 根据当前勾选的复选框状态，取消另一个复选框的勾选状态
@@ -127,7 +130,7 @@ class QueryWindow(tk.Toplevel):
                 self.showBaseInfo(baseInfo[0], baseInfo[1], baseInfo[2], baseInfo[3], baseInfo[4], baseInfo[5])
                 self.queryResults.insert(tk.END, f"查询姓名: {inputText}\n")
                 # 查询考勤记录
-                attendanceRecord = sqlController.SelectAttendanceRecordById(baseInfo[0])
+                attendanceRecord = sqlController.SelectAttendanceRecordByEmployeeID(baseInfo[0])
                 self.showAttendanceRecord(attendanceRecord)
 
         elif self.idVar.get() == 1:
@@ -141,7 +144,7 @@ class QueryWindow(tk.Toplevel):
                 self.showBaseInfo(baseInfo[0], baseInfo[1], baseInfo[2], baseInfo[3], baseInfo[4], baseInfo[5]) 
                 self.queryResults.insert(tk.END, f"查询编号: {inputText}\n")
                 # 查询考勤记录
-                attendanceRecord = sqlController.SelectAttendanceRecordById(baseInfo[0])
+                attendanceRecord = sqlController.SelectAttendanceRecordByEmployeeID(baseInfo[0])
                 self.showAttendanceRecord(attendanceRecord)
 
     def showBaseInfo(self, _id, _name, _position, _salary, _age, _gender):
@@ -165,19 +168,19 @@ class QueryWindow(tk.Toplevel):
         self.genderEntry.insert(0, "男" if int(_gender) == 0 else "女")
 
     def showAttendanceRecord(self, _record):
-        # 显示考勤记录
+        self.queryResults.delete(1.0, tk.END)
         # _record是一个列表，每个元素是一个AttendanceRecord对象, 用于显示签到时间和签到状态
         self.queryResults.insert(tk.END, "考勤记录如下: \n")
         # 对列表按照时间排序
         _record.sort(key=lambda x: x.datetime)
         # AttendanceRecord对象被划分为4列显示, 分别为日期, 上下午(am/pm), 当日具体时间, 签到状态(签到/签退)
         # 第一行显示列名
-        self.queryResults.insert(tk.END, "日期\t\tam/pm\t\t时间\t\t签到状态\n")
+        self.queryResults.insert(tk.END, "日期\t\tam/pm\t\t时间\t\t类型\n")
         for record in _record:
             date, time = record.datetime.date(), record.datetime.time()
             ampm = '上午' if int(time.hour) < 12 else '下午'
-            status = '签到' if record.status == 0 else '签退'
-            self.queryResults.insert(tk.END, f"{date}\t\t{ampm}\t\t{time}\t\t{status}\n")
+            type = '签到' if record.type == 0 else '签退'
+            self.queryResults.insert(tk.END, f"{date}\t\t{ampm}\t\t{time}\t\t{type}\n")
 
     def clear(self):
         self.idEntry["state"] = "normal"
@@ -188,6 +191,8 @@ class QueryWindow(tk.Toplevel):
         self.ageEntry.delete(0, tk.END)
         self.genderEntry.delete(0, tk.END)
         self.queryResults.delete(1.0, tk.END)
+
+
 
 
 if __name__ == '__main__':

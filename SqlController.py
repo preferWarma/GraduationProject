@@ -44,15 +44,22 @@ class SqlController:
             ret.append([result[0], result[1], np.fromstring(result[2][1:-1], sep=', ')])
         return ret
 
-    def SelectAttendanceRecordById(self, EmployeeID):
+    def SelectAttendanceRecordByEmployeeID(self, EmployeeID):
         sql = "select * from attendance where EmployeeID = %s"
         self.cursor.execute(sql, (EmployeeID,))
         sqlResult = self.cursor.fetchall()
         # 将查询结果转换为AttendanceRecord对象(签到时间, 签到状态)
         ret = []
         for result in sqlResult:
-            ret.append(AttendanceRecord(result[2], result[3]))
+            ret.append(AttendanceRecord(result[0], result[1], result[2], result[3]))
         return ret
+
+    def SelectAttendanceRecordByRecordID(self, RecordID):
+        sql = "select * from attendance where AttendanceID = %s"
+        self.cursor.execute(sql, (RecordID,))
+        result = self.cursor.fetchone()
+        # 将查询结果转换为AttendanceRecord对象(签到时间, 签到状态)
+        return AttendanceRecord(result[0], result[1], result[2], result[3]) if result is not None else None
 
     def InsertEmployee(self, name, position, salary, age, gender):
         sql = "INSERT INTO employees (Name, Position, Salary, Age, Gender) VALUES (%s, %s, %s, %s, %s)"
@@ -69,6 +76,16 @@ class SqlController:
     def DeleteEmployee(self, EmployeeID):
         sql = "delete from employees where EmployeeID = %s"
         self.cursor.execute(sql, (EmployeeID,))
+        self.db.commit()
+
+    def DeleteAttendanceRecordByEmployeeID(self, EmployeeID):
+        sql = "delete from attendance where EmployeeID = %s"
+        self.cursor.execute(sql, (EmployeeID,))
+        self.db.commit()
+
+    def DeleteAttendanceRecordByRecordId(self, AttendanceID):
+        sql = "delete from attendance where AttendanceID = %s"
+        self.cursor.execute(sql, (AttendanceID,))
         self.db.commit()
 
     def UpdateEmployeeFaceInfo(self, EmployeeID, faceInfo):
@@ -123,8 +140,8 @@ class SqlController:
         return result[2]
 
     def ExecuteWithSql(self, sql: str):
-        self.cursor.execute(sql)
-        self.db.commit()
+        self.cursor.execute(sql)    # 执行sql语句
+        self.db.commit()    # 提交事务
 
     def SelectWithSql(self, sql: str):
         self.cursor.execute(sql)
@@ -139,7 +156,7 @@ sqlController = SqlController()
 if __name__ == '__main__':
     info = sqlController.SelectEmployeeBaseInfoByName("lyf")
     print(info)  # info = (EmployeeID, Name, Position, Salary, Age, Gender)
-    attendanceList = sqlController.SelectAttendanceRecordById(info[0])
+    attendanceList = sqlController.SelectAttendanceRecordByEmployeeID(info[0])
     for record in attendanceList:
         print(record.__str__())
     last_in = sqlController.GetLastSignInTime(info[0])

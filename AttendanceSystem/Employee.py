@@ -1,5 +1,7 @@
 class AttendanceRecord:
-    def __init__(self, datetime, type):
+    def __init__(self, recordId, employeeId, datetime, type):
+        self.recordID = recordId  # 记录编号
+        self.employeeID = employeeId  # 员工编号
         self.datetime = datetime  # 签到时间
         self.type = type  # 签到状态(0: 签到/1: 签退)
 

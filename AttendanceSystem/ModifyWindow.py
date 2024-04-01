@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import ttk
 
 from AttendanceSystem.Employee import CheckName, CheckPosition, CheckSalary, CheckAge, CheckGender
+from AttendanceSystem.GUIHelper import AddScrollbarToText, InsertRecordWindow, DeleteRecordWindow
 from SqlController import sqlController
 from FaceRecognition.Recognition import recognition
 
@@ -68,8 +69,6 @@ class ModifyWindow(tk.Toplevel):
         self.confirmModifyButton = tk.Button(self.leftFrame, text="确认修改", command=self.confirmModifyButtonClick,
                                              width=10, height=1, background="yellow")
         self.confirmModifyButton.grid(row=5, column=1, rowspan=2)
-        # 默认设置为不可用(当查询到要修改的人员信息时，设置为可用)
-        self.confirmModifyButton["state"] = "disabled"
 
         # 创建6个标签，用于显示要删除的人员信息
         self.idLabel = ttk.Label(self.leftFrame, text="编号", font=("Arial", 10))
@@ -110,8 +109,31 @@ class ModifyWindow(tk.Toplevel):
         self.genderEntry.grid(row=11, column=1)
 
         # 创建用于显示要删除的人员信息结果的文本框
-        self.queryResults = tk.Text(self.rightFrame, width=60, height=30)
+        self.queryResults = tk.Text(self.rightFrame, width=65, height=25)
         self.queryResults.grid(row=0, column=0)
+        # 为文本框添加滚动条
+        AddScrollbarToText(self.queryResults)
+
+        # 在文本框下方创建两个按钮, 分别为增加记录和删除记录
+        self.addRecordButton = tk.Button(self.rightFrame, text="增加记录", command=self.addRecordButtonClick,
+                                         width=20, background="grey")
+        self.addRecordButton.grid(row=1, column=0, pady=10, sticky=tk.W, padx=10)
+
+        self.deleteRecordButton = tk.Button(self.rightFrame, text="删除记录", command=self.deleteRecordButtonClick,
+                                            width=20, background="grey")
+        self.deleteRecordButton.grid(row=1, column=0, pady=10, sticky=tk.E, padx=10)
+
+        # 默认设置为不可用(当查询到要修改的人员信息时，设置为可用)
+        self.setEditButtonState("disabled")
+
+        # 提供两个变量存储选择的记录信息
+        self.selectedDatetime = None  # 用于保存选择的时间
+        self.selectedRecordType = None  # 用于保存选择的记录类型
+
+    def setEditButtonState(self, state):
+        self.confirmModifyButton["state"] = state
+        self.addRecordButton["state"] = state
+        self.deleteRecordButton["state"] = state
 
     def nameSelectCmd(self):
         # 根据当前勾选的复选框状态，取消另一个复选框的勾选状态
@@ -132,45 +154,45 @@ class ModifyWindow(tk.Toplevel):
             # Name被勾选
             if inputText.isspace() or inputText == '':
                 self.queryResults.insert(tk.END, "查询失败,姓名不能为空\n")
-                self.confirmModifyButton["state"] = "disabled"
+                self.setEditButtonState("disabled")
                 return
 
             baseInfo = sqlController.SelectEmployeeBaseInfoByName(inputText)
             if baseInfo is None:
                 self.clear()
                 self.queryResults.insert(tk.END, f"未找到姓名为{inputText}的员工\n")
-                self.confirmModifyButton["state"] = "disabled"
+                self.setEditButtonState("disabled")
                 return
             else:
                 self.showBaseInfo(baseInfo[0], baseInfo[1], baseInfo[2], baseInfo[3], baseInfo[4], baseInfo[5])
                 self.queryResults.insert(tk.END, f"查询姓名: {inputText}\n")
                 # 查询考勤记录
-                attendanceRecord = sqlController.SelectAttendanceRecordById(baseInfo[0])
+                attendanceRecord = sqlController.SelectAttendanceRecordByEmployeeID(baseInfo[0])
                 self.showAttendanceRecord(attendanceRecord)
                 # 设置确认修改按钮为可用
-                self.confirmModifyButton["state"] = "normal"
+                self.setEditButtonState("normal")
 
         elif self.idVar.get() == 1:
             # ID被勾选
             if not inputText.isdigit():
                 self.queryResults.insert(tk.END, "查询失败, 编号需要为数字\n")
-                self.confirmModifyButton["state"] = "disabled"
+                self.setEditButtonState("disabled")
                 return
 
             baseInfo = sqlController.SelectEmployeeBaseInfoById(inputText)
             if baseInfo is None:
                 self.clear()
                 self.queryResults.insert(tk.END, f"未找到编号为{inputText}的员工\n")
-                self.confirmModifyButton["state"] = "disabled"
+                self.setEditButtonState("disabled")
                 return
             else:
                 self.showBaseInfo(baseInfo[0], baseInfo[1], baseInfo[2], baseInfo[3], baseInfo[4], baseInfo[5])
                 self.queryResults.insert(tk.END, f"查询编号: {inputText}\n")
                 # 查询考勤记录
-                attendanceRecord = sqlController.SelectAttendanceRecordById(baseInfo[0])
+                attendanceRecord = sqlController.SelectAttendanceRecordByEmployeeID(baseInfo[0])
                 self.showAttendanceRecord(attendanceRecord)
                 # 设置确认修改按钮为可用
-                self.confirmModifyButton["state"] = "normal"
+                self.setEditButtonState("normal")
 
     def confirmModifyButtonClick(self):
         print("确认修改")
@@ -183,14 +205,25 @@ class ModifyWindow(tk.Toplevel):
         gender = self.genderEntry.get()
         if not self.checkInfo(name, position, salary, age, gender):  # 有不合法的输入
             return
-        # 更新数据库信息
+        # 更新数据库中人员基本信息
         sqlController.UpdateEmployeeBaseInfo(id, name, position, salary, age, 0 if gender == "男" else 1)
-        self.queryResults.delete(1.0, tk.END)
+        self.clear()  # 清空原有的显示信息
         self.queryResults.insert(tk.END, f"编号为{id}的员工信息已修改\n")
-        self.confirmModifyButton["state"] = "disabled"
+        self.setEditButtonState("disabled")
         # 更新当前程序中人脸识别所用的数据库信息
         recognition.updateKnownFeatureList()
 
+    def addRecordButtonClick(self):
+        # 弹出一个新窗口, 用于增加记录, 回调函数用于刷新考勤记录
+        window = InsertRecordWindow(self, onExit=lambda: self.showAttendanceRecord(
+            sqlController.SelectAttendanceRecordByEmployeeID(self.idEntry.get())))
+        self.wait_window(window)
+
+    def deleteRecordButtonClick(self):
+        # 弹出一个新窗口, 用于增加记录, 回调函数用于刷新考勤记录
+        window = DeleteRecordWindow(self, onExit=lambda: self.showAttendanceRecord(
+            sqlController.SelectAttendanceRecordByEmployeeID(self.idEntry.get())))
+        self.wait_window(window)
 
     def showBaseInfo(self, _id, _name, _position, _salary, _age, _gender):
         # 显示基本信息
@@ -215,19 +248,20 @@ class ModifyWindow(tk.Toplevel):
         self.genderEntry.insert(0, "男" if int(_gender) == 0 else "女")
 
     def showAttendanceRecord(self, _record):
-        # 显示考勤记录
+        self.queryResults.delete(1.0, tk.END)
         # _record是一个列表，每个元素是一个AttendanceRecord对象, 用于显示签到时间和签到状态
-        self.queryResults.insert(tk.END, "考勤记录如下: \n")
+        self.queryResults.insert(tk.END, "考勤记录如下: \n\n")
         # 对列表按照时间排序
         _record.sort(key=lambda x: x.datetime)
         # AttendanceRecord对象被划分为4列显示, 分别为日期, 上下午(am/pm), 当日具体时间, 签到状态(签到/签退)
         # 第一行显示列名
-        self.queryResults.insert(tk.END, "日期\t\tam/pm\t\t时间\t\t签到状态\n")
+        self.queryResults.insert(tk.END, "记录号\t   日期\t\tam/pm\t\t时间\t\t类型\n")
         for record in _record:
+            id = record.recordID
             date, time = record.datetime.date(), record.datetime.time()
             ampm = '上午' if int(time.hour) < 12 else '下午'
-            status = '签到' if record.status == 0 else '签退'
-            self.queryResults.insert(tk.END, f"{date}\t\t{ampm}\t\t{time}\t\t{status}\n")
+            type = '签到' if record.type == 0 else '签退'
+            self.queryResults.insert(tk.END, f"{id}\t{date}\t\t{ampm}\t\t{time}\t\t{type}\n")
 
     def checkInfo(self, name, position, salary, age, gender):
         tipLabelText = "以下内容不合法:(请检查后重新输入)\n"

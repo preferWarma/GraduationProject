@@ -1,6 +1,6 @@
 import tkinter as tk
 from datetime import datetime
-from tkinter import ttk, Entry, Label, StringVar
+from tkinter import ttk, Entry, Label
 
 import cv2
 from PIL import Image, ImageTk
