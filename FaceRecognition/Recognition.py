@@ -96,13 +96,14 @@ class Recognition:
             similarPerson = None
             for knownFeature in self.knownFeatureList:  # knownFeatureList: [[id, name, feature(128D)], ...]
                 distance = self.__GetEuclideanDistance(faceFeature[1], knownFeature[2])
-                if distance < minDistance and distance < config.threshold:
+                if distance < minDistance and distance < config.threshold:  # 人脸相似度小于阈值
                     minDistance = distance
                     similarPerson = knownFeature
             if similarPerson is not None:
                 faceFeature[0] = f"{similarPerson[0]}: {similarPerson[1]}"  # 显示id和姓名
                 retInfoList.append((similarPerson[0], similarPerson[1]))
 
+        # 绘制矩形框和文字
         self.__DrawRectangleAndText(frame, faceList, faceFeatureList)
         return frame, retInfoList, faceList
 
@@ -111,4 +112,3 @@ recognition = Recognition()  # 创建识别对象, 供其他模块使用
 
 if __name__ == '__main__':  # 测试运行
     recognition.Main(cv2.VideoCapture(0))
-    pass

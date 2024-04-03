@@ -102,7 +102,7 @@ class SqlController:
         self.db.commit()
 
     def Login(self, userId: str, password: str) -> bool:
-        sql = "select * from managerDataBase where id = %s and password = %s"
+        sql = "select * from manager where ID = %s and Password = %s"
         self.cursor.execute(sql, (userId, password))
         result = self.cursor.fetchone()
         return result is not None
@@ -113,7 +113,7 @@ class SqlController:
 
     def SignOut(self, EmployeeID):
         now_datetime = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        self.InsertAttendanceRecord(EmployeeID, now_datetime, 1)
+        self.InsertAttendanceRecord(EmployeeID, now_datetime, 1 )
 
     def GetLastSignInTime(self, EmployeeID) -> Optional[datetime]:
         """
@@ -158,8 +158,7 @@ if __name__ == '__main__':
     print(info)  # info = (EmployeeID, Name, Position, Salary, Age, Gender)
     attendanceList = sqlController.SelectAttendanceRecordByEmployeeID(info[0])
     for record in attendanceList:
-        print(record.__str__())
+        print(str(record))
     last_in = sqlController.GetLastSignInTime(info[0])
     last_out = sqlController.GetLastSignOutTime(info[0])
     print(f"{last_in}与{last_out}直接的时间差为{last_in - last_out}")
-    pass

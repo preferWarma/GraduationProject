@@ -8,9 +8,6 @@ from Config import config
 
 
 class FeatureCompute:
-    # 私有属性
-    # 共有属性
-
     def __init__(self):
         pass
 
@@ -74,22 +71,5 @@ class FeatureCompute:
             imageList.append(cv2.imread(curImagePath))
         return imageList
 
-    # def SaveFeatureToSql(self, featureStructList: list):
-    #     """
-    #     保存特征列表到Sql
-    #     :param featureStructList: 特征结构体列表, 结构体的第一个元素为人名, 第二个元素为特征列表
-    #     """
-    #     for featureStruct in featureStructList:
-    #         sqlController.InsertWithJudgeExist(featureStruct[0], featureStruct[1])
-
 
 featureCompute = FeatureCompute()  # 创建特征计算对象, 供其他模块使用
-
-if __name__ == '__main__':  # 测试代码
-    featureStructList = []
-    for name in os.listdir(config.imageSaveFolderRoot):
-        imageList = featureCompute.GetImageList(os.path.join(config.imageSaveFolderRoot, name))
-        meanFeature = featureCompute.GetMeanFeature(imageList)
-        print(f"{name}的特征均值为{list(meanFeature)}\n")
-        featureStructList.append((name, list(meanFeature)))
-    featureCompute.SaveFeatureToSql(featureStructList)

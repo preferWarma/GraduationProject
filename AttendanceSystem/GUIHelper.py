@@ -129,7 +129,7 @@ class DeleteRecordWindow(tk.Toplevel):
             self.destroy()
 
         self.onExit = OnExit
-        self.protocol("WM_DELETE_WINDOW", OnExit)
+        self.protocol("WM_DELETE_WINDOW", OnExit)   # 设置窗口关闭时的回调函数
 
         # 创建选择类型标签和ComboBox
         self.labelType = ttk.Label(self, text="选择类型:")

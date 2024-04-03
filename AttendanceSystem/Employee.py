@@ -9,16 +9,6 @@ class AttendanceRecord:
         return str(self.datetime) + ' ' + ('签到' if self.type == 0 else '签退')
 
 
-class Employee:
-    def __init__(self, id, name, position, salary, record=None, faceInfo=None):
-        self.id = id
-        self.name = name
-        self.position = position
-        self.salary = salary
-        self.record = record if record is not None else []  # 签到记录(AttendanceRecord对象)
-        self.faceInfo = faceInfo  # 人脸特征
-
-
 def CheckName(name: str) -> bool:
     """
     检查姓名是否包含字母、空格或者中文字符，并且姓名长度不超过50个字符
@@ -120,4 +110,3 @@ if __name__ == '__main__':
     print(CheckName("123"))
     print(CheckName(" "))
     print(CheckName(""))
-    pass

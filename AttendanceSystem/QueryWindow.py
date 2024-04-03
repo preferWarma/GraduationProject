@@ -141,7 +141,7 @@ class QueryWindow(tk.Toplevel):
                 self.queryResults.insert(tk.END, f"未找到编号为{inputText}的员工\n")
                 return
             else:
-                self.showBaseInfo(baseInfo[0], baseInfo[1], baseInfo[2], baseInfo[3], baseInfo[4], baseInfo[5]) 
+                self.showBaseInfo(baseInfo[0], baseInfo[1], baseInfo[2], baseInfo[3], baseInfo[4], baseInfo[5])
                 self.queryResults.insert(tk.END, f"查询编号: {inputText}\n")
                 # 查询考勤记录
                 attendanceRecord = sqlController.SelectAttendanceRecordByEmployeeID(baseInfo[0])
@@ -191,8 +191,6 @@ class QueryWindow(tk.Toplevel):
         self.ageEntry.delete(0, tk.END)
         self.genderEntry.delete(0, tk.END)
         self.queryResults.delete(1.0, tk.END)
-
-
 
 
 if __name__ == '__main__':

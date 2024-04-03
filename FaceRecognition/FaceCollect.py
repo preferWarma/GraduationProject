@@ -2,7 +2,7 @@ import os
 import random
 
 import cv2
-import numpy
+import numpy as np
 
 from Config import config
 
@@ -64,7 +64,7 @@ class FaceCollect:
             cv2.imwrite(os.path.join(folderPath, f"{_name}_{index}.png"), faceImage)
 
     # 私有方法
-    def __RandomizeImage(self, image: numpy.ndarray, light: float, bias: int) -> numpy.ndarray:
+    def __RandomizeImage(self, image: np.ndarray, light: float, bias: int) -> np.ndarray:
         """
         改变图片的亮度与对比度
         :param image: 需要处理的图像
