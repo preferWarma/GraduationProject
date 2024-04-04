@@ -1,5 +1,4 @@
 import os
-import random
 
 import cv2
 import numpy as np
@@ -22,7 +21,7 @@ class FaceCollect:
         faceImageList = []
         while True:  # 采集captureImageCount张人脸图像
             success, image = camera.read()
-            faces = config.detector(cv2.cvtColor(image, cv2.COLOR_BGR2GRAY), 1)  # 返回的是所有人脸的矩形框(用于定位人脸)
+            faces = config.detector(self.PreHandleImage(image), 1)  # 返回的是所有人脸的矩形框(用于定位人脸)
             if len(faces) > 1:
                 print("检测到多张人脸, 请保持画面上只有一张人脸")
                 continue
@@ -40,8 +39,6 @@ class FaceCollect:
             if cv2.waitKey(1) & 0xFF == ord('q'):  # 如果不延迟, 会造成显示不正常
                 break
 
-            # 随机化亮度与对比度
-            faceImage = self.__RandomizeImage(faceImage, random.uniform(0.8, 1.2), random.randint(-50, 50))
             # 调整图片的尺寸
             faceImage = cv2.resize(faceImage, (config.imageSize, config.imageSize))
             faceImageList.append(faceImage)
@@ -64,25 +61,20 @@ class FaceCollect:
             cv2.imwrite(os.path.join(folderPath, f"{_name}_{index}.png"), faceImage)
 
     # 私有方法
-    def __RandomizeImage(self, image: np.ndarray, light: float, bias: int) -> np.ndarray:
+    def PreHandleImage(self, image):
         """
-        改变图片的亮度与对比度
-        :param image: 需要处理的图像
-        :param light: 亮度因子
-        :param bias: 对比度偏移量
+        对图像进行预处理
         :return: 处理后的图像
         """
-        width = image.shape[1]  # 图像宽度
-        height = image.shape[0]  # 图像高度
-        for i in range(width):
-            for j in range(height):
-                for c in range(3):  # 对应BGR三个通道
-                    tmp = int(image[j, i, c] * light + bias)
-                    if tmp > 255:
-                        tmp = 255
-                    elif tmp < 0:
-                        tmp = 0
-                    image[j, i, c] = tmp
+        # 灰度化
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        # 直方图均衡化
+        image = cv2.equalizeHist(image)
+        # 高斯滤波
+        image = cv2.GaussianBlur(image, (5, 5), 0)
+        # 转为8bit灰度图像, 供dlib检测器使用
+        image = image.astype(np.uint8)
+
         return image
 
     def __del__(self):

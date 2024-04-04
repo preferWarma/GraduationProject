@@ -16,12 +16,12 @@ create table attendance
     EmployeeID         int      null,
     AttendanceDateTime datetime null,
     AttendanceType     tinyint  null comment '0为签到, 1为签退',
-    constraint attendance_ibfk_1    -- 外键约束
+    constraint attendance_ibfk_1
         foreign key (EmployeeID) references employees (EmployeeID)
             on delete cascade
 );
 
-create trigger AddFacialInfoAfterInsert -- 插入员工信息时, 同时插入人脸信息
+create trigger AddFacialInfoAfterInsert
     after insert
     on employees
     for each row
@@ -30,7 +30,7 @@ BEGIN
     VALUES (NEW.EmployeeID, NEW.Name, NULL); -- 将 Face_info 设置为空
 END;
 
-create trigger DeleteAttendanceAndFacialInfoAfterDelete -- 删除员工信息时, 同时删除考勤信息和人脸信息
+create trigger DeleteAttendanceAndFacialInfoAfterDelete
     after delete
     on employees
     for each row
@@ -41,7 +41,7 @@ BEGIN
     DELETE FROM faceinfo WHERE EmployeeID = OLD.EmployeeID;
 END;
 
-create trigger UpdateFacialInfoAfterUpdate  -- 更新员工信息时, 同时更新人脸信息
+create trigger UpdateFacialInfoAfterUpdate
     after update
     on employees
     for each row
@@ -51,22 +51,42 @@ BEGIN
     WHERE EmployeeID = NEW.EmployeeID;
 END;
 
+create trigger add_user_after_employee_insert
+    after insert
+    on employees
+    for each row
+BEGIN
+    INSERT INTO user (userId, password, userType)
+    VALUES (NEW.employeeId, '123456', 0);
+END;
+
+create trigger delete_user_after_employee_delete
+    after delete
+    on employees
+    for each row
+BEGIN
+    DELETE FROM user WHERE userId = OLD.employeeId;
+END;
+
 create table faceinfo
 (
     EmployeeID int           not null
         primary key,
     Name       varchar(100)  null,
     Face_Info  varchar(3072) null,
-    constraint faceinfo_ibfk_1  -- 外键约束
+    constraint faceinfo_ibfk_1
         foreign key (EmployeeID) references employees (EmployeeID)
             on delete cascade
 );
 
-create table manager
+create table user
 (
-    ID       varchar(15) not null
+    userID   int         not null
         primary key,
-    Password varchar(32) not null
+    Password varchar(32) not null,
+    userType tinyint     null comment '0为普通用户, 1为管理员用户',
+    constraint fk_employeeId
+        foreign key (userID) references employees (EmployeeID)
+            on delete cascade
 );
-
 

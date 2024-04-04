@@ -4,6 +4,7 @@ import cv2
 import numpy as np
 
 from Config import config
+from FaceRecognition.FaceCollect import faceCollect
 from SqlController import sqlController
 
 
@@ -32,11 +33,11 @@ class Recognition:
         """
         if image is None:
             return []
-        grayImage = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
-        faces = detector(grayImage, 0)
+        image = faceCollect.PreHandleImage(image)
+        faces = detector(image, 0)
         return faces
 
-    def __DrawRectangleAndText(self, image, faceList, faceFeatureList):
+    def DrawRectangleAndText(self, image, faceList, faceFeatureList):
         font = cv2.FONT_HERSHEY_COMPLEX  # 字体
         for index, face in enumerate(faceList):
             name = faceFeatureList[index][0]
@@ -50,7 +51,6 @@ class Recognition:
             cv2.putText(image, name, textPosition, font, 1, textColor, 2)
 
     def Main(self, camera):
-
         while camera.isOpened():
             start_time = time.time()
 
@@ -104,7 +104,7 @@ class Recognition:
                 retInfoList.append((similarPerson[0], similarPerson[1]))
 
         # 绘制矩形框和文字
-        self.__DrawRectangleAndText(frame, faceList, faceFeatureList)
+        self.DrawRectangleAndText(frame, faceList, faceFeatureList)
         return frame, retInfoList, faceList
 
 

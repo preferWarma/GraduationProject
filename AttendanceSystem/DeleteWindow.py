@@ -1,15 +1,18 @@
 import tkinter as tk
 from tkinter import ttk
 
+from AttendanceSystem.Employee import User
 from FaceRecognition.Recognition import recognition
 from SqlController import sqlController
 from AttendanceSystem.GUIHelper import AddScrollbarToText
 
 
 class DeleteWindow(tk.Toplevel):
-    def __init__(self, master=None):
+    def __init__(self, master=None, user: User = None):
         super().__init__(master)
         self.title("删除界面")
+
+        self.user = user
 
         # 划分左右两个Frame
         self.leftFrame = ttk.Frame(self)
@@ -172,6 +175,10 @@ class DeleteWindow(tk.Toplevel):
     def confirmDeleteButtonClick(self):
         print("确认删除")
         deleteId = self.idEntry.get()
+        if deleteId == str(self.user.userId):
+            self.queryResults.insert(tk.END, f"编号为{deleteId}的员工信息已删除\n")
+            self.queryResults.insert(tk.END, "不能删除自己的信息\n")
+            return
         sqlController.DeleteEmployee(deleteId)
         self.clear()    # 清空原有的显示信息
         self.queryResults.insert(tk.END, f"编号为{deleteId}的员工信息已删除\n")
@@ -230,5 +237,5 @@ class DeleteWindow(tk.Toplevel):
 
 if __name__ == '__main__':
     root = tk.Tk()
-    queryWindow = DeleteWindow(root)
+    queryWindow = DeleteWindow(root, sqlController.Login("lyf", 123456))
     root.mainloop()

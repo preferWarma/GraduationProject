@@ -1,6 +1,13 @@
 import tkinter as tk
 from datetime import datetime
 from tkinter import ttk, messagebox
+
+import cv2
+
+from AttendanceSystem.Employee import User
+from FaceRecognition.FaceCollect import faceCollect
+from FaceRecognition.FeatureCompute import featureCompute
+from FaceRecognition.Recognition import recognition
 from SqlController import sqlController
 
 
@@ -129,7 +136,7 @@ class DeleteRecordWindow(tk.Toplevel):
             self.destroy()
 
         self.onExit = OnExit
-        self.protocol("WM_DELETE_WINDOW", OnExit)   # 设置窗口关闭时的回调函数
+        self.protocol("WM_DELETE_WINDOW", OnExit)  # 设置窗口关闭时的回调函数
 
         # 创建选择类型标签和ComboBox
         self.labelType = ttk.Label(self, text="选择类型:")
@@ -212,6 +219,107 @@ class DeleteRecordWindow(tk.Toplevel):
             self.onExit()
 
 
+class UpdateFaceInfoWindow(tk.Toplevel):
+    def __init__(self, user: User, camera):
+        super().__init__()
+        self.faces = None  # 当前画面上的人脸信息
+        self.user = user
+        self.title("更新人脸信息")
+
+        # 两个Label分别显示人员编号和人员姓名
+        self.employeeIdLabel = ttk.Label(self, text=f"人员编号: {user.userId}")
+        self.employeeIdLabel.grid(row=0, column=0, padx=5, pady=5)
+
+        self.employeeNameLabel = ttk.Label(self,
+                                           text=f"人员姓名: {sqlController.SelectEmployeeBaseInfoById(user.userId)[1]}")
+        self.employeeNameLabel.grid(row=1, column=0, padx=5, pady=5)
+
+        # 下方有一个按钮用于更新人脸信息
+        self.updateButton = ttk.Button(self, text="更新人脸信息", command=self.updateFaceInfo)
+        self.updateButton.grid(row=2, column=0, columnspan=2, padx=5, pady=5)
+
+        # 按钮下方有一个Label用于显示更新结果
+        self.resultLabel = ttk.Label(self)
+        self.resultLabel.grid(row=3, column=0, columnspan=2, padx=5, pady=5)
+
+        self.camera = camera
+
+    def updateFaceInfo(self):
+        self.updateFaceInfoByPersonId(self.user.userId)
+
+    def updateFaceInfoByPersonId(self, personId):
+        """
+        通过人员编号更新人脸信息
+        :param personId: 人员编号
+        :return: 更新结果
+        """
+        self.resultLabel.configure(text="正在更新人脸信息", foreground="blue")
+
+        faceImageList = faceCollect.GetFaceListFromVideo(self.camera)
+        feature = featureCompute.GetMeanFeature(faceImageList)
+        sqlController.UpdateEmployeeFaceInfo(personId, feature)
+        recognition.updateKnownFeatureList()
+
+        self.resultLabel.configure(text="人脸信息更新成功", foreground="green")
+
+    def updateFaceInfoByPersonName(self, personName):
+        """
+        通过人员姓名更新人脸信息
+        :param personName: 人员姓名
+        :return: 更新结果
+        """
+        _id = sqlController.SelectEmployeeBaseInfoByName(personName)[0]
+        self.updateFaceInfoByPersonId(_id)
+
+
+class UpdatePasswordWindow(tk.Toplevel):
+    def __init__(self, user: User = None):
+        super().__init__()
+        self.title("修改密码")
+        self.user = user
+
+        # 创建两个Label和两个Entry分别用于输入旧密码和新密码
+        self.oldPasswordLabel = ttk.Label(self, text="旧密码:")
+        self.oldPasswordLabel.grid(row=0, column=0, padx=5, pady=5)
+        self.oldPasswordEntry = ttk.Entry(self, show="*")
+        self.oldPasswordEntry.grid(row=0, column=1, padx=5, pady=5)
+
+        self.newPasswordLabel = ttk.Label(self, text="新密码:")
+        self.newPasswordLabel.grid(row=1, column=0, padx=5, pady=5)
+        self.newPasswordEntry = ttk.Entry(self, show="*")
+        self.newPasswordEntry.grid(row=1, column=1, padx=5, pady=5)
+
+        # 创建一个按钮用于确认修改密码
+        self.confirmButton = ttk.Button(self, text="确认", command=self.confirm)
+        self.confirmButton.grid(row=2, column=0, columnspan=2, padx=5, pady=5)
+
+        # 创建一个Label用于显示修改结果
+        self.resultLabel = ttk.Label(self)
+        self.resultLabel.grid(row=3, column=0, columnspan=2, padx=5, pady=5)
+
+    def confirm(self):
+        oldPassword = self.oldPasswordEntry.get()
+        newPassword = self.newPasswordEntry.get()
+        if self.checkPassword(oldPassword, newPassword):
+            sqlController.UpdateUserPassword(self.user.userId, newPassword)
+            self.resultLabel.configure(text="密码修改成功", foreground="green")
+
+    def checkPassword(self, oldWord, newWord):
+        # 旧密码错误
+        if oldWord != self.user.password:
+            self.resultLabel.configure(text="旧密码错误", foreground="red")
+            return False
+        # 新旧密码不能相同
+        if oldWord == newWord:
+            self.resultLabel.configure(text="新旧密码不能相同", foreground="red")
+            return False
+        # 检查新密码长度
+        if len(newWord) < 6:
+            self.resultLabel.configure(text="密码长度不能少于6位", foreground="red")
+            return False
+        return True
+
+
 class TestApp(tk.Tk):
     def __init__(self):
         super().__init__()
@@ -275,7 +383,21 @@ def TestDeleteRecordWindow():
     app.mainloop()
 
 
+def TestUpdateFaceInfoWindow():
+    root = tk.Tk()
+    UpdateFaceInfoWindow(user=sqlController.Login(9, 123456), camera=cv2.VideoCapture(0))
+    root.mainloop()
+
+
+def TestUpdatePasswordWindow():
+    root = tk.Tk()
+    UpdatePasswordWindow(user=sqlController.Login(13, 123456))
+    root.mainloop()
+
+
 if __name__ == "__main__":
     # TestScrollBar()
     # TestDateTimePicker()
-    TestDeleteRecordWindow()
+    # TestDeleteRecordWindow()
+    # TestUpdateFaceInfoWindow()
+    TestUpdatePasswordWindow()

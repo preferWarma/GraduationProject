@@ -54,6 +54,12 @@ class InsertWindow(tk.Toplevel):
         self.genderCombobox = ttk.Combobox(self.frame, values=["男", "女"], state="readonly", width=17)
         self.genderCombobox.grid(row=9, column=1, pady=(0, 18))
 
+        # 权限
+        self.permissionLabel = ttk.Label(self.frame, text="权限: ")
+        self.permissionLabel.grid(row=10, column=0, sticky=tk.W, padx=(0, 10), pady=(0, 18))
+        self.permissionCombobox = ttk.Combobox(self.frame, values=["普通员工", "管理员"], state="readonly", width=17)
+        self.permissionCombobox.grid(row=10, column=1, pady=(0, 18))
+
         self.faceVar = tk.IntVar()
         self.faceVar.set(0)
 
@@ -129,6 +135,7 @@ class InsertWindow(tk.Toplevel):
         # 添加到数据库
         insertId = sqlController.InsertEmployee(name, position, salary, age, gender)
         sqlController.UpdateEmployeeFaceInfo(insertId, self.faceInfo)
+        sqlController.UpdateUserType(insertId, 0 if self.permissionCombobox.get() == "普通员工" else 1)
         # 添加成功提示
         self.tipLabel.config(text=f"添加成功, 新增人员ID编号为{insertId}")
         self.tipLabel.after(5000, lambda: self.tipLabel.config(text=""))

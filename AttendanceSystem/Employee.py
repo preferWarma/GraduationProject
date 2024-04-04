@@ -9,6 +9,14 @@ class AttendanceRecord:
         return str(self.datetime) + ' ' + ('签到' if self.type == 0 else '签退')
 
 
+class User:
+    def __init__(self, userId, password, userType):
+        self.userId = userId
+        self.password = password
+        self.userType = userType
+
+
+
 def CheckName(name: str) -> bool:
     """
     检查姓名是否包含字母、空格或者中文字符，并且姓名长度不超过50个字符

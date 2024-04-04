@@ -4,7 +4,7 @@ from typing import Optional
 import mysql.connector
 import numpy as np
 
-from AttendanceSystem.Employee import AttendanceRecord
+from AttendanceSystem.Employee import AttendanceRecord, User
 
 
 class SqlController:
@@ -101,11 +101,30 @@ class SqlController:
         self.cursor.execute(sql, (name, position, salary, age, gender, id))
         self.db.commit()
 
-    def Login(self, userId: str, password: str) -> bool:
-        sql = "select * from manager where ID = %s and Password = %s"
-        self.cursor.execute(sql, (userId, password))
+    def UpdateUserPassword(self, userId, newPassword):
+        sql = "update user set Password = %s where userID = %s"
+        self.cursor.execute(sql, (newPassword, userId))
+        self.db.commit()
+
+    def UpdateUserType(self, userId, userType: int):    # 0: 员工, 1: 管理员
+        sql = "update user set UserType = %s where userID = %s"
+        self.cursor.execute(sql, (userType, userId))
+        self.db.commit()
+
+    def Login(self, idOrName: str, password: str) -> Optional[User]:
+        sql = "select * from user where userID = %s and Password = %s"
+        self.cursor.execute(sql, (idOrName, password))
         result = self.cursor.fetchone()
-        return result is not None
+        if result is not None:
+            return User(result[0], result[1], result[2])
+        else:  # 编号查询不到，尝试姓名查询
+            _id = sqlController.SelectEmployeeBaseInfoByName(idOrName)[0]
+            sql = "select * from user where userID = %s and Password = %s"
+            self.cursor.execute(sql, (_id, password))
+            result = self.cursor.fetchone()
+            if result is not None:
+                return User(result[0], result[1], result[2])
+        return None
 
     def SignIn(self, EmployeeID):
         now_datetime = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
@@ -113,7 +132,7 @@ class SqlController:
 
     def SignOut(self, EmployeeID):
         now_datetime = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        self.InsertAttendanceRecord(EmployeeID, now_datetime, 1 )
+        self.InsertAttendanceRecord(EmployeeID, now_datetime, 1)
 
     def GetLastSignInTime(self, EmployeeID) -> Optional[datetime]:
         """
@@ -140,8 +159,8 @@ class SqlController:
         return result[2]
 
     def ExecuteWithSql(self, sql: str):
-        self.cursor.execute(sql)    # 执行sql语句
-        self.db.commit()    # 提交事务
+        self.cursor.execute(sql)  # 执行sql语句
+        self.db.commit()  # 提交事务
 
     def SelectWithSql(self, sql: str):
         self.cursor.execute(sql)

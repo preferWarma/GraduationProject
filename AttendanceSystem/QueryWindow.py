@@ -1,14 +1,17 @@
 import tkinter as tk
 from tkinter import ttk
 
+from AttendanceSystem.Employee import User
 from AttendanceSystem.GUIHelper import AddScrollbarToText
 from SqlController import sqlController
 
 
 class QueryWindow(tk.Toplevel):
-    def __init__(self, master=None):
+    def __init__(self, master=None, user: User = None):
         super().__init__(master)
         self.title("查询界面")
+
+        self.user = user
 
         # 划分左右两个Frame
         self.leftFrame = ttk.Frame(self)
@@ -104,6 +107,10 @@ class QueryWindow(tk.Toplevel):
         # 为文本框添加滚动条
         AddScrollbarToText(self.queryResults)
 
+        # 如果是员工用户，设置只读
+        if user.userType == 0:
+            self.SetReadOnly()
+
     def nameSelectCmd(self):
         # 根据当前勾选的复选框状态，取消另一个复选框的勾选状态
         if self.nameVar.get() == 1:
@@ -182,6 +189,33 @@ class QueryWindow(tk.Toplevel):
             type = '签到' if record.type == 0 else '签退'
             self.queryResults.insert(tk.END, f"{date}\t\t{ampm}\t\t{time}\t\t{type}\n")
 
+    def SetReadOnly(self):
+        # 对于员工用户，只能查询自己的信息
+
+        # 查询自己的基本信息
+        userInfo = sqlController.SelectEmployeeBaseInfoById(self.user.userId)
+        self.idEntry.insert(0, userInfo[0])
+        self.nameEntry.insert(0, userInfo[1])
+        self.positionEntry.insert(0, userInfo[2])
+        self.salaryEntry.insert(0, f"{userInfo[3]}元/月")
+        self.ageEntry.insert(0, f"{userInfo[4]}岁")
+        self.genderEntry.insert(0, "男" if int(userInfo[5]) == 0 else "女")
+
+        # 查询自己的考勤记录
+        attendanceRecord = sqlController.SelectAttendanceRecordByEmployeeID(self.user.userId)
+        self.showAttendanceRecord(attendanceRecord)
+
+        # 设置输入框为只读
+        self.inputBox["state"] = "readonly"
+        self.idEntry["state"] = "readonly"
+        self.nameEntry["state"] = "readonly"
+        self.positionEntry["state"] = "readonly"
+        self.salaryEntry["state"] = "readonly"
+        self.ageEntry["state"] = "readonly"
+        self.genderEntry["state"] = "readonly"
+        # 关闭查询按钮
+        self.confirmButton["state"] = "disabled"
+
     def clear(self):
         self.idEntry["state"] = "normal"
         self.idEntry.delete(0, tk.END)
@@ -195,5 +229,5 @@ class QueryWindow(tk.Toplevel):
 
 if __name__ == '__main__':
     root = tk.Tk()
-    queryWindow = QueryWindow(root)
+    queryWindow = QueryWindow(root, sqlController.Login(13, 123456))
     root.mainloop()
