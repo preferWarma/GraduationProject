@@ -118,7 +118,10 @@ class SqlController:
         if result is not None:
             return User(result[0], result[1], result[2])
         else:  # 编号查询不到，尝试姓名查询
-            _id = sqlController.SelectEmployeeBaseInfoByName(idOrName)[0]
+            _info = sqlController.SelectEmployeeBaseInfoByName(idOrName)
+            if _info is None:
+                return None
+            _id = _info[0]
             sql = "select * from user where userID = %s and Password = %s"
             self.cursor.execute(sql, (_id, password))
             result = self.cursor.fetchone()

@@ -16,7 +16,6 @@ class User:
         self.userType = userType
 
 
-
 def CheckName(name: str) -> bool:
     """
     检查姓名是否包含字母、空格或者中文字符，并且姓名长度不超过50个字符
@@ -101,6 +100,10 @@ def CheckAge(age: str) -> bool:
 
 def CheckGender(gender: str) -> bool:
     return gender == '男' or gender == '女'
+
+
+def CheckPermission(permission: str) -> bool:
+    return permission == '普通员工' or permission == '管理员'
 
 
 if __name__ == '__main__':

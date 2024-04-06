@@ -5,7 +5,7 @@ import cv2
 
 from FaceRecognition.FaceCollect import faceCollect
 from FaceRecognition.FeatureCompute import featureCompute
-from AttendanceSystem.Employee import CheckName, CheckPosition, CheckSalary, CheckAge, CheckGender
+from AttendanceSystem.Employee import CheckName, CheckPosition, CheckSalary, CheckAge, CheckGender, CheckPermission
 from FaceRecognition.Recognition import recognition
 from SqlController import sqlController
 
@@ -103,6 +103,7 @@ class InsertWindow(tk.Toplevel):
         salary = self.salaryEntry.get()
         age = self.ageEntry.get()
         gender = self.genderCombobox.get()
+        permission = self.permissionCombobox.get()
 
         # 提示词先清空
         self.tipLabel.config(text="")
@@ -123,6 +124,8 @@ class InsertWindow(tk.Toplevel):
             tipLabelText += "年龄(介于18-65之间)\n"
         if not CheckGender(gender):
             tipLabelText += "性别(不能为空)\n"
+        if not CheckPermission(permission):
+            tipLabelText += "权限(不能为空)\n"
 
         if tipLabelText != "以下内容不合法:(请检查后重新输入)\n":  # 有不合法的输入
             self.tipLabel.config(text=tipLabelText)
@@ -135,7 +138,7 @@ class InsertWindow(tk.Toplevel):
         # 添加到数据库
         insertId = sqlController.InsertEmployee(name, position, salary, age, gender)
         sqlController.UpdateEmployeeFaceInfo(insertId, self.faceInfo)
-        sqlController.UpdateUserType(insertId, 0 if self.permissionCombobox.get() == "普通员工" else 1)
+        sqlController.UpdateUserType(insertId, 0 if permission == "普通员工" else 1)
         # 添加成功提示
         self.tipLabel.config(text=f"添加成功, 新增人员ID编号为{insertId}")
         self.tipLabel.after(5000, lambda: self.tipLabel.config(text=""))
