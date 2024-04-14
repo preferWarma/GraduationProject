@@ -49,11 +49,14 @@ class MainGUI:
         self.btnView = ttk.Button(self.left_frame, text="查看人员信息", command=self.queryPerson, style="TButton")
         self.btnEdit = ttk.Button(self.left_frame, text="修改人员信息", command=self.modifyPerson, style="TButton")
         self.btnDelete = ttk.Button(self.left_frame, text="删除人员", command=self.deletePerson, style="TButton")
+        self.btnChangeToNormalUser = ttk.Button(self.left_frame, text="切换到普通用户", command=self.changeToNormalUser,
+                                                style="TButton")
 
         self.btnAdd.grid(row=0, column=0, pady=10)
         self.btnView.grid(row=1, column=0, pady=10)
         self.btnEdit.grid(row=2, column=0, pady=10)
         self.btnDelete.grid(row=3, column=0, pady=10)
+        self.btnChangeToNormalUser.grid(row=4, column=0, pady=10)
 
         # 左侧按钮(普通用户版本)
         self.btnSearchMyself = ttk.Button(self.left_frame, text="查询个人信息",
@@ -129,6 +132,7 @@ class MainGUI:
         self.btnView.grid(row=1, column=0, pady=10, columnspan=2)
         self.btnEdit.grid(row=2, column=0, pady=10, columnspan=2)
         self.btnDelete.grid(row=3, column=0, pady=10, columnspan=2)
+        self.btnChangeToNormalUser.grid(row=4, column=0, pady=10, columnspan=2)
         self.logoutButton.grid(row=13, column=0, pady=10, columnspan=2)
 
     def hideManagerSection(self):
@@ -137,6 +141,7 @@ class MainGUI:
         self.btnView.grid_forget()
         self.btnEdit.grid_forget()
         self.btnDelete.grid_forget()
+        self.btnChangeToNormalUser.grid_forget()
         self.logoutButton.grid_forget()
 
     def showNormalUserSection(self):
@@ -260,6 +265,10 @@ class MainGUI:
     def updatePassword(self):
         # 实现修改密码的逻辑
         UpdatePasswordWindow(self.currentUser)
+
+    def changeToNormalUser(self):
+        self.currentUser.userType = 0   # 切换到普通用户界面，只在本地修改当前用户的用户类型，不更新数据库
+        self.SetCurrentSection('normalUser')
 
     def clear(self):
         # 清空所有提示和输入框
